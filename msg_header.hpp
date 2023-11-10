@@ -6,11 +6,15 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "endian.hpp"
+
 class MsgHeader {
  public:
   MsgHeader() = delete;
   MsgHeader(char *buffer, size_t buffer_length, size_t buffer_offset)
-      : buffer_{buffer}, buffer_length_{buffer_length}, buffer_offset_{buffer_offset} {
+      : buffer_{buffer},
+        buffer_length_{buffer_length},
+        buffer_offset_{buffer_offset} {
     if (buffer_length < buffer_offset + EncodedLength()) {
       throw std::runtime_error("buffer to small for MsgHeader");
     }
@@ -64,11 +68,12 @@ class MsgHeader {
     uint16_t val{};
     std::memcpy(&val, buffer_ + buffer_offset_ + MsgLenEncodingOffset(),
                 sizeof(uint16_t));
-    return val;
+    return LITTLE_ENDIAN_ENCODE_16(val);
   }
 
   MsgHeader &MsgLen(const uint16_t val) noexcept {
-    std::memcpy(buffer_ + buffer_offset_ + MsgLenEncodingOffset(), &val,
+    uint16_t value = LITTLE_ENDIAN_ENCODE_16(val);
+    std::memcpy(buffer_ + buffer_offset_ + MsgLenEncodingOffset(), &value,
                 sizeof(uint16_t));
     return *this;
   }
@@ -86,11 +91,12 @@ class MsgHeader {
     uint64_t val{};
     std::memcpy(&val, buffer_ + buffer_offset_ + TimestampEncodingOffset(),
                 sizeof(uint64_t));
-    return val;
+    return LITTLE_ENDIAN_ENCODE_64(val);
   }
 
   MsgHeader &Timestamp(const uint64_t val) noexcept {
-    std::memcpy(buffer_ + buffer_offset_ + TimestampEncodingOffset(), &val,
+    uint64_t value = LITTLE_ENDIAN_ENCODE_64(val);
+    std::memcpy(buffer_ + buffer_offset_ + TimestampEncodingOffset(), &value,
                 sizeof(uint64_t));
     return *this;
   }
@@ -108,11 +114,12 @@ class MsgHeader {
     uint16_t val{};
     std::memcpy(&val, buffer_ + buffer_offset_ + ChecksumEncodingOffset(),
                 sizeof(uint16_t));
-    return val;
+    return LITTLE_ENDIAN_ENCODE_16(val);
   }
 
   MsgHeader &Checksum(const uint16_t val) noexcept {
-    std::memcpy(buffer_ + buffer_offset_ + ChecksumEncodingOffset(), &val,
+    uint16_t value = LITTLE_ENDIAN_ENCODE_16(val);
+    std::memcpy(buffer_ + buffer_offset_ + ChecksumEncodingOffset(), &value,
                 sizeof(uint16_t));
     return *this;
   }
