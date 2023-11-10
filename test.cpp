@@ -6,6 +6,7 @@
 #include "msg_login_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
+#include "msg_logout_request.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -417,11 +418,29 @@ void TestSubmissionResponse() {
   std::cout << "TestSubmissionResponse done." << std::endl;
 }
 
+void TestLogoutRequest() {
+  // Ensure encoding/decoding works.
+  {
+    char buf[128];
+    LogoutRequest req{buf, 128, 0};
+
+    assert((void*)req.Buffer() == (void*)buf);
+    assert(req.BufferLength() == 128);
+    assert(req.BufferOffset() == 0);
+    assert(req.EncodedLength() == 0);
+
+    assert(req.MsgType() == 'O');
+  }
+
+  std::cout << "TestLogoutRequest done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
   TestLoginResponse();
   TestSubmissionRequest();
   TestSubmissionResponse();
+  TestLogoutRequest();
   std::cout << "Bye." << std::endl;
 }
