@@ -3,6 +3,7 @@
 
 #include "msg_header.hpp"
 #include "msg_login_request.hpp"
+#include "msg_login_response.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -148,8 +149,79 @@ void TestLoginRequest() {
   std::cout << "TestLoginRequest done." << std::endl;
 }
 
+void TestLoginResponse() {
+  // Ensure encoding/decoding works.
+  {
+    char buf[128];
+    LoginResponse res{buf, 128, 0};
+
+    assert((void*)res.Buffer() == (void*)buf);
+    assert(res.BufferLength() == 128);
+    assert(res.BufferOffset() == 0);
+    assert(res.EncodedLength() == 33);
+
+    assert(res.CodeEncodingLength() == 1);
+    assert(res.CodeEncodingOffset() == 0);
+
+    assert(res.ReasonEncodingLength() == 32);
+    assert(res.ReasonEncodingOffset() == 1);
+
+    assert(res.MsgType() == 'E');
+
+    // Encode and check decoding
+    char code = 'Y';
+
+    const char* reason = "no reason";
+    size_t reason_length = strlen(reason);
+
+    res.Code(code).Reason([&](char* slice, size_t len) {
+      assert(len == res.ReasonEncodingLength() - 1);
+      assert((void*)slice == (void*)((char*)buf + res.ReasonEncodingOffset()));
+      memcpy(slice, reason, reason_length);
+      return reason_length;
+    });
+    assert(res.Code() == 'Y');
+    assert(strcmp(res.Reason(), reason) == 0);
+  }
+
+  // Ensure the message can fit in the passed buffer.
+  {
+    constexpr size_t InvalidLength = LoginResponse::EncodedLength() - 1;
+    char buf[InvalidLength];
+    bool ok{false};
+    try {
+      LoginResponse req{buf, InvalidLength, 0};
+    } catch (const std::exception& e) {
+      ok = true;
+    }
+    assert(ok);
+  }
+
+  // Ensure reason is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = LoginResponse::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    LoginResponse res{buf, Length, 0};
+
+    res.Reason([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = LoginResponse::ReasonEncodingOffset();
+         i < LoginResponse::ReasonEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[LoginResponse::ReasonEncodingOffset() +
+               LoginResponse::ReasonEncodingLength() - 1] == '\0');
+  }
+
+  std::cout << "TestLoginResponse done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
+  TestLoginResponse();
   std::cout << "Bye." << std::endl;
 }
