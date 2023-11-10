@@ -125,7 +125,8 @@ void TestLoginRequest() {
          i < LoginRequest::UserEncodingLength() - 1; i++) {
       assert(buf[i] == 'a');
     }
-    assert(buf[LoginRequest::UserEncodingLength() - 1] == '\0');
+    assert(buf[LoginRequest::UserEncodingOffset() +
+               LoginRequest::UserEncodingLength() - 1] == '\0');
   }
 
   // Ensure user is truncated if it exceeds its max length.
@@ -143,7 +144,8 @@ void TestLoginRequest() {
          i < LoginRequest::PasswordEncodingLength() - 1; i++) {
       assert(buf[i] == 'b');
     }
-    assert(buf[LoginRequest::PasswordEncodingLength() - 1] == '\0');
+    assert(buf[LoginRequest::PasswordEncodingOffset() +
+               LoginRequest::PasswordEncodingLength() - 1] == '\0');
   }
 
   std::cout << "TestLoginRequest done." << std::endl;
