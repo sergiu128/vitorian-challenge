@@ -4,6 +4,7 @@
 #include "msg_header.hpp"
 #include "msg_login_request.hpp"
 #include "msg_login_response.hpp"
+#include "msg_submission_request.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -129,7 +130,7 @@ void TestLoginRequest() {
                LoginRequest::UserEncodingLength() - 1] == '\0');
   }
 
-  // Ensure user is truncated if it exceeds its max length.
+  // Ensure password is truncated if it exceeds its max length.
   {
     constexpr size_t Length = LoginRequest::EncodedLength() * 2;
     char buf[Length];
@@ -221,9 +222,140 @@ void TestLoginResponse() {
   std::cout << "TestLoginResponse done." << std::endl;
 }
 
+void TestSubmissionRequest() {
+  // Ensure encoding/decoding works.
+  {
+    char buf[256];
+    SubmissionRequest req{buf, 256, 0};
+
+    assert((void*)req.Buffer() == (void*)buf);
+    assert(req.BufferLength() == 256);
+    assert(req.BufferOffset() == 0);
+    assert(req.EncodedLength() == 3 * 64);
+
+    assert(req.NameEncodingLength() == 64);
+    assert(req.NameEncodingOffset() == 0);
+
+    assert(req.EmailEncodingLength() == 64);
+    assert(req.EmailEncodingOffset() == 64);
+
+    assert(req.RepoEncodingLength() == 64);
+    assert(req.RepoEncodingOffset() == 128);
+
+    assert(req.MsgType() == 'S');
+
+    // Encode and check decoding
+    const char* name = "Sergiu Marin";
+    size_t name_length = strlen(name);
+
+    const char* email = "sergiu4096@gmail.com";
+    size_t email_length = strlen(email);
+
+    const char* repo = "https://github.com/sergiu128/vitorian-challenge";
+    size_t repo_length = strlen(repo);
+
+    req.Name([&](char* slice, size_t len) {
+         assert(len == req.NameEncodingLength() - 1);
+         assert((void*)slice == (void*)((char*)buf + req.NameEncodingOffset()));
+         memcpy(slice, name, name_length);
+         return name_length;
+       })
+        .Email([&](char* slice, size_t len) {
+          assert(len == req.EmailEncodingLength() - 1);
+          assert((void*)slice ==
+                 (void*)((char*)buf + req.EmailEncodingOffset()));
+          memcpy(slice, email, email_length);
+          return email_length;
+        })
+        .Repo([&](char* slice, size_t len) {
+          assert(len == req.RepoEncodingLength() - 1);
+          assert((void*)slice ==
+                 (void*)((char*)buf + req.RepoEncodingOffset()));
+          memcpy(slice, repo, repo_length);
+          return repo_length;
+        });
+    assert(strcmp(req.Name(), name) == 0);
+    assert(strcmp(req.Email(), email) == 0);
+    assert(strcmp(req.Repo(), repo) == 0);
+  }
+
+  // Ensure the message can fit in the passed buffer.
+  {
+    constexpr size_t InvalidLength = SubmissionRequest::EncodedLength() - 1;
+    char buf[InvalidLength];
+    bool ok{false};
+    try {
+      SubmissionRequest req{buf, InvalidLength, 0};
+    } catch (const std::exception& e) {
+      ok = true;
+    }
+    assert(ok);
+  }
+
+  // Ensure name is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    SubmissionRequest req{buf, Length, 0};
+
+    req.Name([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = SubmissionRequest::NameEncodingOffset();
+         i < SubmissionRequest::NameEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[SubmissionRequest::NameEncodingOffset() +
+               SubmissionRequest::NameEncodingLength() - 1] == '\0');
+  }
+
+  // Ensure email is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    SubmissionRequest req{buf, Length, 0};
+
+    req.Email([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = SubmissionRequest::EmailEncodingOffset();
+         i < SubmissionRequest::EmailEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[SubmissionRequest::EmailEncodingOffset() +
+               SubmissionRequest::EmailEncodingLength() - 1] == '\0');
+  }
+
+  // Ensure repo is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    SubmissionRequest req{buf, Length, 0};
+
+    req.Repo([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = SubmissionRequest::RepoEncodingOffset();
+         i < SubmissionRequest::RepoEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[SubmissionRequest::RepoEncodingOffset() +
+               SubmissionRequest::RepoEncodingLength() - 1] == '\0');
+  }
+
+  std::cout << "TestSubmissionRequest done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
   TestLoginResponse();
+  TestSubmissionRequest();
   std::cout << "Bye." << std::endl;
 }
