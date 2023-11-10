@@ -5,6 +5,7 @@
 #include "msg_login_request.hpp"
 #include "msg_login_response.hpp"
 #include "msg_submission_request.hpp"
+#include "msg_submission_response.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -352,10 +353,75 @@ void TestSubmissionRequest() {
   std::cout << "TestSubmissionRequest done." << std::endl;
 }
 
+void TestSubmissionResponse() {
+  // Ensure encoding/decoding works.
+  {
+    char buf[128];
+    SubmissionResponse res{buf, 128, 0};
+
+    assert((void*)res.Buffer() == (void*)buf);
+    assert(res.BufferLength() == 128);
+    assert(res.BufferOffset() == 0);
+    assert(res.EncodedLength() == 32);
+
+    assert(res.TokenEncodingLength() == 32);
+    assert(res.TokenEncodingOffset() == 0);
+
+    assert(res.MsgType() == 'R');
+
+    // Encode and check decoding
+    const char* token = "abcdefghijklmnopqrstuvwxyz";
+    size_t token_length = strlen(token);
+
+    res.Token([&](char* slice, size_t len) {
+      assert(len == res.TokenEncodingLength() - 1);
+      assert((void*)slice == (void*)((char*)buf + res.TokenEncodingOffset()));
+      memcpy(slice, token, token_length);
+      return token_length;
+    });
+    assert(strcmp(res.Token(), token) == 0);
+  }
+
+  // Ensure the message can fit in the passed buffer.
+  {
+    constexpr size_t InvalidLength = SubmissionResponse::EncodedLength() - 1;
+    char buf[InvalidLength];
+    bool ok{false};
+    try {
+      SubmissionResponse req{buf, InvalidLength, 0};
+    } catch (const std::exception& e) {
+      ok = true;
+    }
+    assert(ok);
+  }
+
+  // Ensure token is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = SubmissionResponse::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    SubmissionResponse res{buf, Length, 0};
+
+    res.Token([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = SubmissionResponse::TokenEncodingOffset();
+         i < SubmissionResponse::TokenEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[SubmissionResponse::TokenEncodingOffset() +
+               SubmissionResponse::TokenEncodingLength() - 1] == '\0');
+  }
+
+  std::cout << "TestSubmissionResponse done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
   TestLoginResponse();
   TestSubmissionRequest();
+  TestSubmissionResponse();
   std::cout << "Bye." << std::endl;
 }
