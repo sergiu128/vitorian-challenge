@@ -4,9 +4,10 @@
 #include "msg_header.hpp"
 #include "msg_login_request.hpp"
 #include "msg_login_response.hpp"
+#include "msg_logout_request.hpp"
+#include "msg_logout_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
-#include "msg_logout_request.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -435,6 +436,70 @@ void TestLogoutRequest() {
   std::cout << "TestLogoutRequest done." << std::endl;
 }
 
+void TestLogoutResponse() {
+  // Ensure encoding/decoding works.
+  {
+    char buf[128];
+    LogoutResponse res{buf, 128, 0};
+
+    assert((void*)res.Buffer() == (void*)buf);
+    assert(res.BufferLength() == 128);
+    assert(res.BufferOffset() == 0);
+    assert(res.EncodedLength() == 32);
+
+    assert(res.ReasonEncodingLength() == 32);
+    assert(res.ReasonEncodingOffset() == 0);
+
+    assert(res.MsgType() == 'G');
+
+    // Encode and check decoding
+    const char* reason = "no reason";
+    size_t reason_length = strlen(reason);
+
+    res.Reason([&](char* slice, size_t len) {
+      assert(len == res.ReasonEncodingLength() - 1);
+      assert((void*)slice == (void*)((char*)buf + res.ReasonEncodingOffset()));
+      memcpy(slice, reason, reason_length);
+      return reason_length;
+    });
+    assert(strcmp(res.Reason(), reason) == 0);
+  }
+
+  // Ensure the message can fit in the passed buffer.
+  {
+    constexpr size_t InvalidLength = LogoutResponse::EncodedLength() - 1;
+    char buf[InvalidLength];
+    bool ok{false};
+    try {
+      LogoutResponse req{buf, InvalidLength, 0};
+    } catch (const std::exception& e) {
+      ok = true;
+    }
+    assert(ok);
+  }
+
+  // Ensure reason is truncated if it exceeds its max length.
+  {
+    constexpr size_t Length = LogoutResponse::EncodedLength() * 2;
+    char buf[Length];
+    memset(buf, 0, Length);
+    LogoutResponse res{buf, Length, 0};
+
+    res.Reason([&](char* slice, size_t max_length) {
+      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
+      return max_length + 2;
+    });
+    for (size_t i = LogoutResponse::ReasonEncodingOffset();
+         i < LogoutResponse::ReasonEncodingLength() - 1; i++) {
+      assert(buf[i] == 'a');
+    }
+    assert(buf[LogoutResponse::ReasonEncodingOffset() +
+               LogoutResponse::ReasonEncodingLength() - 1] == '\0');
+  }
+
+  std::cout << "TestLogoutResponse done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -442,5 +507,7 @@ int main() {
   TestSubmissionRequest();
   TestSubmissionResponse();
   TestLogoutRequest();
+  TestLogoutResponse();
+
   std::cout << "Bye." << std::endl;
 }
