@@ -13,4 +13,4 @@ add_compile_options(
     -Werror=format)
 
 add_executable(main main.cpp)
-add_executable(test test.cpp)
+add_executable(test test.cpp tcp_client.cpp tcp_server.cpp tcp_stream.cpp)

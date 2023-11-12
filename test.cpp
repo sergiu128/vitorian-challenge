@@ -1,5 +1,9 @@
+#include <unistd.h>
+
 #include <cassert>
 #include <iostream>
+#include <memory>
+#include <thread>
 
 #include "msg_header.hpp"
 #include "msg_login_request.hpp"
@@ -8,6 +12,8 @@
 #include "msg_logout_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
+#include "tcp_client.hpp"
+#include "tcp_server.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -500,6 +506,43 @@ void TestLogoutResponse() {
   std::cout << "TestLogoutResponse done." << std::endl;
 }
 
+void TestTcp() {
+  auto server_runner = [&]() {
+    try {
+      TcpServer tcp_server{"localhost", 8080};
+      auto tcp_stream = tcp_server.Accept();
+
+      const char* to_write = "12345678";
+      for (size_t i = 0; i < 8; i++) {
+        tcp_stream.WriteExact(to_write + i, 1);
+      }
+    } catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
+    }
+  };
+  std::thread server_thread{server_runner};
+
+  sleep(1);  // allow the server to come online
+
+  auto client_runner = [&]() {
+    try {
+      TcpClient tcp_client{};
+      auto tcp_stream = tcp_client.Connect("localhost", 8080);
+      char buf[128];
+      tcp_stream.ReadExact(buf, 8);
+      assert(strcmp(buf, "12345678") == 0);
+    } catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
+    }
+  };
+  std::thread client_thread{client_runner};
+
+  client_thread.join();
+  server_thread.join();
+
+  std::cout << "TestTcp done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -508,6 +551,7 @@ int main() {
   TestSubmissionResponse();
   TestLogoutRequest();
   TestLogoutResponse();
+  TestTcp();
 
   std::cout << "Bye." << std::endl;
 }
