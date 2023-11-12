@@ -27,7 +27,7 @@ class LogoutResponse {
   LogoutResponse(LogoutResponse &&) = default;
   LogoutResponse &operator=(LogoutResponse &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'G'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'G'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept { return 32; }
 

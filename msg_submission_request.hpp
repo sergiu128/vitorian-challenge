@@ -27,7 +27,7 @@ class SubmissionRequest {
   SubmissionRequest(SubmissionRequest &&) = default;
   SubmissionRequest &operator=(SubmissionRequest &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'S'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'S'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept {
     return 3 * 64;

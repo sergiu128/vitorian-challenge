@@ -28,7 +28,7 @@ class LoginResponse {
   LoginResponse(LoginResponse &&) = default;
   LoginResponse &operator=(LoginResponse &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'E'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'E'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept { return 33; }
 

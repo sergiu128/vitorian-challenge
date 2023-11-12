@@ -27,7 +27,7 @@ class SubmissionResponse {
   SubmissionResponse(SubmissionResponse &&) = default;
   SubmissionResponse &operator=(SubmissionResponse &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'R'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'R'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept { return 32; }
 

@@ -27,7 +27,7 @@ class LogoutRequest {
   LogoutRequest(LogoutRequest &&) = default;
   LogoutRequest &operator=(LogoutRequest &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'O'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'O'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept { return 0; }
 

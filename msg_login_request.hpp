@@ -27,7 +27,7 @@ class LoginRequest {
   LoginRequest(LoginRequest &&) = default;
   LoginRequest &operator=(LoginRequest &&) = default;
 
-  [[nodiscard]] char MsgType() const noexcept { return 'L'; }
+  [[nodiscard]] static constexpr char MsgType() noexcept { return 'L'; }
 
   [[nodiscard]] static constexpr size_t EncodedLength() noexcept { return 96; }
 
