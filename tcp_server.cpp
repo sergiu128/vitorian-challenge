@@ -76,7 +76,8 @@ TcpServer::~TcpServer() { Close(); }
 
 void TcpServer::Close() noexcept {
   if (sockfd_ >= 0) {
-    std::cout << "(tcp-server) closing listen socket" << std::endl;
+    std::cout << "(tcp-server) closing listen socket fd=" << sockfd_
+              << std::endl;
     close(sockfd_);
     sockfd_ = -1;
   }

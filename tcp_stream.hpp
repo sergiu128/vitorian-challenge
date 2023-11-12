@@ -5,7 +5,7 @@
 class TcpStream {
  public:
   TcpStream() = delete;
-  TcpStream(int fd);
+  TcpStream(int sockfd);
   ~TcpStream();
 
   // Copy.
@@ -21,5 +21,5 @@ class TcpStream {
   void WriteExact(const char* b, size_t len);
 
  private:
-  int fd_;
+  int sockfd_;
 };
