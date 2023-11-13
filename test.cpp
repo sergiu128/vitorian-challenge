@@ -18,12 +18,13 @@
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    MsgHeader header{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    MsgHeader header{buf, 1024, 128};
 
     assert((void*)header.Buffer() == (void*)buf);
-    assert(header.BufferLength() == 128);
-    assert(header.BufferOffset() == 0);
+    assert(header.BufferLength() == 1024);
+    assert(header.BufferOffset() == 128);
     assert(header.EncodedLength() == 13);
 
     assert(header.MsgTypeEncodingLength() == 1);
@@ -44,6 +45,10 @@ void TestMsgHeader() {
     assert(header.MsgLen() == 8);
     assert(header.Timestamp() == 123);
     assert(header.Checksum() == 64);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + header.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
@@ -65,12 +70,13 @@ void TestMsgHeader() {
 void TestLoginRequest() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    LoginRequest req{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    LoginRequest req{buf, 1024, 128};
 
     assert((void*)req.Buffer() == (void*)buf);
-    assert(req.BufferLength() == 128);
-    assert(req.BufferOffset() == 0);
+    assert(req.BufferLength() == 1024);
+    assert(req.BufferOffset() == 128);
     assert(req.EncodedLength() == 96);
 
     assert(req.UserEncodingLength() == 64);
@@ -90,21 +96,26 @@ void TestLoginRequest() {
 
     req.User([&](char* slice, size_t max_length) {
          assert(max_length == LoginRequest::UserEncodingLength() - 1);
-         assert((void*)slice == (void*)((char*)buf + req.UserEncodingOffset()));
+         assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
+                                        req.UserEncodingOffset()));
 
          memcpy(slice, user, user_length);
          return user_length;
        })
         .Password([&](char* slice, size_t len) {
           assert(len == req.PasswordEncodingLength() - 1);
-          assert((void*)slice ==
-                 (void*)((char*)buf + req.PasswordEncodingOffset()));
+          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
+                                         req.PasswordEncodingOffset()));
 
           memcpy(slice, password, password_length);
           return password_length;
         });
     assert(strcmp(req.User(), user) == 0);
     assert(strcmp(req.Password(), password) == 0);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + req.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
@@ -164,12 +175,13 @@ void TestLoginRequest() {
 void TestLoginResponse() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    LoginResponse res{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    LoginResponse res{buf, 1024, 128};
 
     assert((void*)res.Buffer() == (void*)buf);
-    assert(res.BufferLength() == 128);
-    assert(res.BufferOffset() == 0);
+    assert(res.BufferLength() == 1024);
+    assert(res.BufferOffset() == 128);
     assert(res.EncodedLength() == 33);
 
     assert(res.CodeEncodingLength() == 1);
@@ -188,12 +200,17 @@ void TestLoginResponse() {
 
     res.Code(code).Reason([&](char* slice, size_t len) {
       assert(len == res.ReasonEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.ReasonEncodingOffset()));
+      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
+                                     res.ReasonEncodingOffset()));
       memcpy(slice, reason, reason_length);
       return reason_length;
     });
     assert(res.Code() == 'Y');
     assert(strcmp(res.Reason(), reason) == 0);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
@@ -234,12 +251,13 @@ void TestLoginResponse() {
 void TestSubmissionRequest() {
   // Ensure encoding/decoding works.
   {
-    char buf[256];
-    SubmissionRequest req{buf, 256, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    SubmissionRequest req{buf, 1024, 128};
 
     assert((void*)req.Buffer() == (void*)buf);
-    assert(req.BufferLength() == 256);
-    assert(req.BufferOffset() == 0);
+    assert(req.BufferLength() == 1024);
+    assert(req.BufferOffset() == 128);
     assert(req.EncodedLength() == 3 * 64);
 
     assert(req.NameEncodingLength() == 64);
@@ -265,27 +283,32 @@ void TestSubmissionRequest() {
 
     req.Name([&](char* slice, size_t len) {
          assert(len == req.NameEncodingLength() - 1);
-         assert((void*)slice == (void*)((char*)buf + req.NameEncodingOffset()));
+         assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
+                                        req.NameEncodingOffset()));
          memcpy(slice, name, name_length);
          return name_length;
        })
         .Email([&](char* slice, size_t len) {
           assert(len == req.EmailEncodingLength() - 1);
-          assert((void*)slice ==
-                 (void*)((char*)buf + req.EmailEncodingOffset()));
+          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
+                                         req.EmailEncodingOffset()));
           memcpy(slice, email, email_length);
           return email_length;
         })
         .Repo([&](char* slice, size_t len) {
           assert(len == req.RepoEncodingLength() - 1);
-          assert((void*)slice ==
-                 (void*)((char*)buf + req.RepoEncodingOffset()));
+          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
+                                         req.RepoEncodingOffset()));
           memcpy(slice, repo, repo_length);
           return repo_length;
         });
     assert(strcmp(req.Name(), name) == 0);
     assert(strcmp(req.Email(), email) == 0);
     assert(strcmp(req.Repo(), repo) == 0);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + req.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
@@ -364,12 +387,13 @@ void TestSubmissionRequest() {
 void TestSubmissionResponse() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    SubmissionResponse res{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    SubmissionResponse res{buf, 1024, 128};
 
     assert((void*)res.Buffer() == (void*)buf);
-    assert(res.BufferLength() == 128);
-    assert(res.BufferOffset() == 0);
+    assert(res.BufferLength() == 1024);
+    assert(res.BufferOffset() == 128);
     assert(res.EncodedLength() == 32);
 
     assert(res.TokenEncodingLength() == 32);
@@ -383,11 +407,16 @@ void TestSubmissionResponse() {
 
     res.Token([&](char* slice, size_t len) {
       assert(len == res.TokenEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.TokenEncodingOffset()));
+      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
+                                     res.TokenEncodingOffset()));
       memcpy(slice, token, token_length);
       return token_length;
     });
     assert(strcmp(res.Token(), token) == 0);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
@@ -428,15 +457,18 @@ void TestSubmissionResponse() {
 void TestLogoutRequest() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    LogoutRequest req{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    LogoutRequest req{buf, 1024, 128};
 
     assert((void*)req.Buffer() == (void*)buf);
-    assert(req.BufferLength() == 128);
-    assert(req.BufferOffset() == 0);
+    assert(req.BufferLength() == 1024);
+    assert(req.BufferOffset() == 128);
     assert(req.EncodedLength() == 0);
 
     assert(req.MsgType() == 'O');
+
+    for (size_t i = 0; i < 1024; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestLogoutRequest done." << std::endl;
@@ -445,12 +477,13 @@ void TestLogoutRequest() {
 void TestLogoutResponse() {
   // Ensure encoding/decoding works.
   {
-    char buf[128];
-    LogoutResponse res{buf, 128, 0};
+    char buf[1024];
+    memset(buf, 0, 1024);
+    LogoutResponse res{buf, 1024, 128};
 
     assert((void*)res.Buffer() == (void*)buf);
-    assert(res.BufferLength() == 128);
-    assert(res.BufferOffset() == 0);
+    assert(res.BufferLength() == 1024);
+    assert(res.BufferOffset() == 128);
     assert(res.EncodedLength() == 32);
 
     assert(res.ReasonEncodingLength() == 32);
@@ -464,11 +497,16 @@ void TestLogoutResponse() {
 
     res.Reason([&](char* slice, size_t len) {
       assert(len == res.ReasonEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.ReasonEncodingOffset()));
+      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
+                                     res.ReasonEncodingOffset()));
       memcpy(slice, reason, reason_length);
       return reason_length;
     });
     assert(strcmp(res.Reason(), reason) == 0);
+
+    for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
+    for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
+      assert(buf[i] == 0);
   }
 
   // Ensure the message can fit in the passed buffer.
