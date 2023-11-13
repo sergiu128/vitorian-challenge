@@ -12,6 +12,7 @@
 #include "msg_logout_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
+#include "resolver.hpp"
 #include "tcp_client.hpp"
 #include "tcp_server.hpp"
 
@@ -581,6 +582,24 @@ void TestTcp() {
   std::cout << "TestTcp done." << std::endl;
 }
 
+void TestResolver() {
+  Resolver resolver{};
+
+  auto results1 = resolver.Resolve("localhost", 8080);
+  assert(results1.size() == 1);
+  assert(results1[0].port == 8080);
+  results1[0].addr_str = "test";
+
+  auto results2 = resolver.Resolve("localhost", 9090);
+  assert(results2.size() == 1);
+  assert(results2[0].port == 9090);
+
+  assert(results1[0].addr_str == "test");
+  assert(results2[0].addr_str == "127.0.0.1");
+
+  std::cout << "TestResolver done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -590,6 +609,7 @@ int main() {
   TestLogoutRequest();
   TestLogoutResponse();
   TestTcp();
+  TestResolver();
 
   std::cout << "Bye." << std::endl;
 }

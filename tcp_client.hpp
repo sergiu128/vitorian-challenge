@@ -1,5 +1,6 @@
 #pragma once
 
+#include "resolver.hpp"
 #include "tcp_stream.hpp"
 
 class TcpClient {
@@ -18,4 +19,5 @@ class TcpClient {
   TcpStream Connect(const char* addr, int port);
 
  private:
+  Resolver resolver_{};
 };

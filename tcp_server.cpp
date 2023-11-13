@@ -14,33 +14,16 @@
 #include <system_error>
 
 TcpServer::TcpServer(const char* addr, int port) {
-  struct addrinfo hint {};
-  memset(&hint, 0, sizeof(addrinfo));
-  hint.ai_family = AF_INET;
-  hint.ai_socktype = SOCK_STREAM;
-
-  std::string port_str{std::to_string(port)};
-
-  struct addrinfo* ip{};
-  if (getaddrinfo(addr, port_str.c_str(), &hint, &ip) != 0) {
-    std::cout << "ERR(tcp-server) getaddrinfo" << std::endl;
-    throw std::system_error(errno, std::generic_category());
+  auto results = resolver_.Resolve(addr, port);
+  if (results.size() == 0) {
+    throw std::runtime_error("could not resolve addr to any ip");
   }
+  auto resolved_addr = results[0];
 
-  char ip_str_storage[INET_ADDRSTRLEN];
-  const char* ip_str = inet_ntop(
-      ip->ai_family, &(((struct sockaddr_in*)(ip->ai_addr))->sin_addr),
-      ip_str_storage, INET_ADDRSTRLEN);
-  if (ip_str == nullptr) {
-    std::cout << "ERR(tcp-server) inet_ntop" << std::endl;
-    freeaddrinfo(ip);
-    throw std::system_error(errno, std::generic_category());
-  }
-
-  int sockfd = socket(ip->ai_family, ip->ai_socktype, ip->ai_protocol);
+  int sockfd = socket(resolved_addr.socket_domain, resolved_addr.socket_type,
+                      resolved_addr.socket_protocol);
   if (sockfd < 0) {
     std::cout << "ERR(tcp-server) socket" << std::endl;
-    freeaddrinfo(ip);
     throw std::system_error(errno, std::generic_category());
   }
 
@@ -50,26 +33,22 @@ TcpServer::TcpServer(const char* addr, int port) {
     throw std::system_error(errno, std::generic_category());
   }
 
-  if (bind(sockfd, ip->ai_addr, ip->ai_addrlen) != 0) {
+  if (bind(sockfd, resolved_addr.addr, resolved_addr.addr_len) != 0) {
     std::cout << "ERR(tcp-server) bind" << std::endl;
-    freeaddrinfo(ip);
     close(sockfd);
     throw std::system_error(errno, std::generic_category());
   }
 
   if (listen(sockfd, 128) != 0) {
     std::cout << "ERR(tcp-server) listen" << std::endl;
-    freeaddrinfo(ip);
     close(sockfd);
     throw std::system_error(errno, std::generic_category());
   }
 
   sockfd_ = sockfd;
 
-  std::cout << "(tcp-server) listening on " << ip_str << " fd=" << sockfd_
-            << std::endl;
-
-  freeaddrinfo(ip);
+  std::cout << "(tcp-server) listening on " << resolved_addr.addr_str
+            << " fd=" << sockfd_ << std::endl;
 }
 
 TcpServer::~TcpServer() { Close(); }

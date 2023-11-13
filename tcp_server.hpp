@@ -1,5 +1,6 @@
 #pragma once
 
+#include "resolver.hpp"
 #include "tcp_stream.hpp"
 
 class TcpServer {
@@ -20,4 +21,5 @@ class TcpServer {
 
  private:
   int sockfd_{-1};
+  Resolver resolver_{};
 };
