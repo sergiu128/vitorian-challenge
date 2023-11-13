@@ -1,10 +1,13 @@
 #include <unistd.h>
 
+#include <atomic>
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <thread>
 
+#include "checksum.hpp"
 #include "msg_header.hpp"
 #include "msg_login_request.hpp"
 #include "msg_login_response.hpp"
@@ -12,6 +15,7 @@
 #include "msg_logout_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
+#include "proto_client.hpp"
 #include "resolver.hpp"
 #include "tcp_client.hpp"
 #include "tcp_server.hpp"
@@ -529,6 +533,77 @@ void TestResolver() {
   std::cout << "TestResolver done." << std::endl;
 }
 
+void TestProtoClient() {
+  auto run_server = [&](const char* addr, int port,
+                        std::function<void(TcpStream&)> todo_fn) {
+    std::atomic<bool> ready{false};
+    auto proto_server = [&]() {
+      Resolver resolver{};
+      auto addrs = resolver.Resolve(addr, port);
+      assert(addrs.size() > 0);
+
+      TcpServer server{addrs[0]};
+      ready.store(true);
+
+      TcpStream stream{server.Accept()};
+      todo_fn(stream);
+    };
+    std::thread proto_server_runner{proto_server};
+
+    while (!ready.load())
+      ;
+
+    return proto_server_runner;
+  };
+
+  const char* addr = "localhost";
+  int port = 8088;
+
+  std::cout << "---------------------------" << std::endl;
+  // server closes the connection immediately
+  {
+    auto thread = run_server(addr, port, [](TcpStream&) {});
+    ProtoClient client{};
+    client.Run(addr, port);
+    thread.join();
+  }
+
+  std::cout << "---------------------------" << std::endl;
+  // server checks LoginRequest and replies with a LogoutResponse with the wrong
+  // checksum
+  {
+    auto thread = run_server(addr, port, [](TcpStream& stream) {
+      char buf[1024];
+
+      MsgHeader header{buf, 1024, 0};
+      stream.ReadExact(buf, header.EncodedLength());
+      assert(header.MsgType() == 'L');
+      assert(header.MsgLen() == 109);
+      // TODO assert timestamp
+      // TODO assert checksum
+
+      LoginRequest req{buf, 1024, header.EncodedLength()};
+      stream.ReadExact(buf + header.EncodedLength(), req.EncodedLength());
+      assert(req.User() == "sergiu4096@gmail.com");
+      assert(req.Password() == "pwd123");
+
+      LogoutResponse res{buf, 1024, header.EncodedLength()};
+      auto len = header.EncodedLength() + res.EncodedLength();
+      header.MsgType(res.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
+      res.Reason("test");
+
+      stream.WriteExact(buf, len);
+
+      sleep(1);
+    });
+    ProtoClient client{};
+    client.Run(addr, port);
+    thread.join();
+  }
+
+  std::cout << "TestProtoClient done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -539,6 +614,7 @@ int main() {
   TestLogoutResponse();
   TestTcp();
   TestResolver();
+  TestProtoClient();
 
   std::cout << "Bye." << std::endl;
 }

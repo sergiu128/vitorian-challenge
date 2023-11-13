@@ -18,7 +18,7 @@ class TcpServer {
   TcpServer& operator=(TcpServer&&);
 
   void Close() noexcept;
-  TcpStream Accept();
+  [[nodiscard]] TcpStream Accept();
 
  private:
   int sockfd_{-1};

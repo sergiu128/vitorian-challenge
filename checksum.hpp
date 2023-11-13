@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-inline uint16_t VerifyChecksum(const char* b, uint32_t len) {
+inline uint16_t Checksum(const char* b, uint32_t len) {
   uint32_t sum = 0;
   for (uint32_t j = 0; j < len - 1; j += 2) {
     sum += *((uint16_t*)(&b[j]));

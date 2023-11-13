@@ -18,4 +18,5 @@ add_executable(test
     tcp_client.cpp
     tcp_server.cpp
     tcp_stream.cpp
-    resolver.cpp)
+    resolver.cpp
+    proto_client.cpp)
