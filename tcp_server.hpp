@@ -8,12 +8,12 @@ class TcpServer {
   ~TcpServer();
 
   // Copy.
-  TcpServer(const TcpServer&) = default;
-  TcpServer& operator=(const TcpServer&) = default;
+  TcpServer(const TcpServer&) = delete;
+  TcpServer& operator=(const TcpServer&) = delete;
 
   // Move.
-  TcpServer(TcpServer&&) = default;
-  TcpServer& operator=(TcpServer&&) = default;
+  TcpServer(TcpServer&&);
+  TcpServer& operator=(TcpServer&&);
 
   void Close() noexcept;
   TcpStream Accept();

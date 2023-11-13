@@ -9,12 +9,12 @@ class TcpStream {
   ~TcpStream();
 
   // Copy.
-  TcpStream(const TcpStream&) = default;
-  TcpStream& operator=(const TcpStream&) = default;
+  TcpStream(const TcpStream&) = delete;
+  TcpStream& operator=(const TcpStream&) = delete;
 
   // Move.
-  TcpStream(TcpStream&&) = default;
-  TcpStream& operator=(TcpStream&&) = default;
+  TcpStream(TcpStream&&);
+  TcpStream& operator=(TcpStream&&);
 
   void Close() noexcept;
   void ReadExact(char* b, size_t len);

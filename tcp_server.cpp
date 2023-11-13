@@ -74,6 +74,18 @@ TcpServer::TcpServer(const char* addr, int port) {
 
 TcpServer::~TcpServer() { Close(); }
 
+TcpServer::TcpServer(TcpServer&& from) {
+  this->sockfd_ = from.sockfd_;
+  from.sockfd_ = -1;
+}
+
+TcpServer& TcpServer::operator=(TcpServer&& from) {
+  Close();
+  this->sockfd_ = from.sockfd_;
+  from.sockfd_ = -1;
+  return *this;
+}
+
 void TcpServer::Close() noexcept {
   if (sockfd_ >= 0) {
     std::cout << "(tcp-server) closing listen socket fd=" << sockfd_

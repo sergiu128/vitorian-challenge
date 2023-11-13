@@ -29,6 +29,18 @@ TcpStream::TcpStream(int sockfd) : sockfd_{sockfd} {
 
 TcpStream::~TcpStream() { Close(); }
 
+TcpStream::TcpStream(TcpStream&& from) {
+  this->sockfd_ = from.sockfd_;
+  from.sockfd_ = -1;
+}
+
+TcpStream& TcpStream::operator=(TcpStream&& from) {
+  Close();
+  this->sockfd_ = from.sockfd_;
+  from.sockfd_ = -1;
+  return *this;
+}
+
 void TcpStream::Close() noexcept {
   if (sockfd_ >= 0) {
     std::cout << "(tcp-stream) closed fd=" << sockfd_ << std::endl;

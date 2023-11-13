@@ -8,8 +8,8 @@ class TcpClient {
   ~TcpClient() = default;
 
   // Copy.
-  TcpClient(const TcpClient&) = default;
-  TcpClient& operator=(const TcpClient&) = default;
+  TcpClient(const TcpClient&) = delete;
+  TcpClient& operator=(const TcpClient&) = delete;
 
   // Move.
   TcpClient(TcpClient&&) = default;
