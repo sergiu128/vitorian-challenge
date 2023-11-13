@@ -8,6 +8,10 @@
 #include <system_error>
 
 TcpStream::TcpStream(int sockfd) : sockfd_{sockfd} {
+  if (sockfd < 0) {
+    throw std::runtime_error("invalid socket fd");
+  }
+
   struct timeval timeout {
     .tv_sec = 5, .tv_usec = 0,
   };
