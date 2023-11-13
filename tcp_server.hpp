@@ -5,7 +5,8 @@
 
 class TcpServer {
  public:
-  TcpServer(const char* addr, int port);
+  TcpServer() = delete;
+  TcpServer(const Resolver::Addr& addr);
   ~TcpServer();
 
   // Copy.
@@ -21,5 +22,4 @@ class TcpServer {
 
  private:
   int sockfd_{-1};
-  Resolver resolver_{};
 };

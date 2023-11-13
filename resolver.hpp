@@ -18,7 +18,7 @@ class Resolver {
   Resolver(Resolver&&) = default;
   Resolver& operator=(Resolver&&) = default;
 
-  struct Result {
+  struct Addr {
     int socket_domain;
     int socket_type;
     int socket_protocol;
@@ -27,7 +27,7 @@ class Resolver {
     std::string addr_str;
     int port;
   };
-  [[nodiscard]] std::vector<Result> Resolve(const char* addr, int port);
+  [[nodiscard]] std::vector<Addr> Resolve(const char* addr, int port);
 
   void Close() noexcept;
 

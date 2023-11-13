@@ -8,13 +8,13 @@
 
 Resolver::~Resolver() { Close(); }
 
-std::vector<Resolver::Result> Resolver::Resolve(const char* addr, int port) {
+std::vector<Resolver::Addr> Resolver::Resolve(const char* addr, int port) {
   Close();
 
   std::cout << "(resolver) resolving addr=" << addr << " port=" << port
             << std::endl;
 
-  std::vector<Resolver::Result> results{};
+  std::vector<Resolver::Addr> results{};
 
   struct addrinfo hint {};
   memset(&hint, 0, sizeof(addrinfo));
@@ -49,7 +49,7 @@ std::vector<Resolver::Result> Resolver::Resolve(const char* addr, int port) {
     std::cout << "(resolver) addr=" << addr << " resolved to " << ip_str
               << std::endl;
 
-    results.push_back(Resolver::Result{
+    results.push_back(Resolver::Addr{
         .socket_domain = ip->ai_family,
         .socket_type = ip->ai_socktype,
         .socket_protocol = ip->ai_protocol,

@@ -13,15 +13,9 @@
 #include <string>
 #include <system_error>
 
-TcpServer::TcpServer(const char* addr, int port) {
-  auto results = resolver_.Resolve(addr, port);
-  if (results.size() == 0) {
-    throw std::runtime_error("could not resolve addr to any ip");
-  }
-  auto resolved_addr = results[0];
-
-  int sockfd = socket(resolved_addr.socket_domain, resolved_addr.socket_type,
-                      resolved_addr.socket_protocol);
+TcpServer::TcpServer(const Resolver::Addr& addr) {
+  int sockfd =
+      socket(addr.socket_domain, addr.socket_type, addr.socket_protocol);
   if (sockfd < 0) {
     std::cout << "ERR(tcp-server) socket" << std::endl;
     throw std::system_error(errno, std::generic_category());
@@ -33,7 +27,7 @@ TcpServer::TcpServer(const char* addr, int port) {
     throw std::system_error(errno, std::generic_category());
   }
 
-  if (bind(sockfd, resolved_addr.addr, resolved_addr.addr_len) != 0) {
+  if (bind(sockfd, addr.addr, addr.addr_len) != 0) {
     std::cout << "ERR(tcp-server) bind" << std::endl;
     close(sockfd);
     throw std::system_error(errno, std::generic_category());
@@ -47,7 +41,7 @@ TcpServer::TcpServer(const char* addr, int port) {
 
   sockfd_ = sockfd;
 
-  std::cout << "(tcp-server) listening on " << resolved_addr.addr_str
+  std::cout << "(tcp-server) listening on " << addr.addr_str
             << " fd=" << sockfd_ << std::endl;
 }
 

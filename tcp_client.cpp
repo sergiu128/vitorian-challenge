@@ -14,43 +14,28 @@
 #include <string>
 #include <system_error>
 
-TcpStream TcpClient::Connect(const char* addr, int port) {
-  std::cout << "(tcp-client) trying to connect to addr=" << addr
-            << " port=" << port << std::endl;
-
-  auto addrs = resolver_.Resolve(addr, port);
-  if (addrs.size() == 0) {
-    throw std::runtime_error("could not resolve addr to any ips");
-  }
+TcpStream TcpClient::Connect(const Resolver::Addr& addr) {
+  std::cout << "(tcp-client) trying to connect to addr=" << addr.addr_str
+            << " port=" << addr.port << std::endl;
 
   int sockfd{-1};
-  for (const auto& resolved_addr : addrs) {
-    sockfd = socket(resolved_addr.socket_domain, resolved_addr.socket_type,
-                    resolved_addr.socket_protocol);
-    if (sockfd == -1) {
-      std::cout << "(tcp-client) could not create socket for "
-                << resolved_addr.addr_str << std::endl;
-      continue;
-    }
-
-    if (connect(sockfd, resolved_addr.addr, resolved_addr.addr_len) != 0) {
-      std::cout << "(tcp-client) could not connect to "
-                << resolved_addr.addr_str << std::endl;
-      close(sockfd);
-      sockfd = -1;
-      continue;
-    } else {
-      std::cout << "(tcp-client) connected to addr=" << addr
-                << " ip=" << resolved_addr.addr_str << " fd=" << sockfd
-                << std::endl;
-      return TcpStream{sockfd};
-    }
-  }
-
+  sockfd = socket(addr.socket_domain, addr.socket_type, addr.socket_protocol);
   if (sockfd == -1) {
-    std::cout << "ERR(tcp-client) socket" << std::endl;
-    throw std::runtime_error("(tcp-client) could not connect to any ips");
+    std::cout << "ERR(tcp-client) could not create socket for " << addr.addr_str
+              << std::endl;
+    throw std::system_error(errno, std::generic_category());
   }
+
+  if (connect(sockfd, addr.addr, addr.addr_len) != 0) {
+    std::cout << "ERR(tcp-client) could not connect to " << addr.addr_str
+              << std::endl;
+    close(sockfd);
+    sockfd = -1;
+    throw std::system_error(errno, std::generic_category());
+  }
+
+  std::cout << "(tcp-client) connected to addr=" << addr.addr_str
+            << " fd=" << sockfd << std::endl;
 
   return TcpStream{sockfd};
 }

@@ -16,8 +16,7 @@ class TcpClient {
   TcpClient(TcpClient&&) = default;
   TcpClient& operator=(TcpClient&&) = default;
 
-  TcpStream Connect(const char* addr, int port);
+  TcpStream Connect(const Resolver::Addr& addr);
 
  private:
-  Resolver resolver_{};
 };

@@ -548,7 +548,10 @@ void TestLogoutResponse() {
 void TestTcp() {
   auto server_runner = [&]() {
     try {
-      TcpServer tcp_server{"localhost", 8080};
+      Resolver resolver{};
+      auto addrs = resolver.Resolve("localhost", 8080);
+      assert(addrs.size() > 0);
+      TcpServer tcp_server{addrs[0]};
       auto tcp_stream = tcp_server.Accept();
 
       const char* to_write = "12345678";
@@ -565,8 +568,11 @@ void TestTcp() {
 
   auto client_runner = [&]() {
     try {
+      Resolver resolver{};
+      auto addrs = resolver.Resolve("localhost", 8080);
+      assert(addrs.size() > 0);
       TcpClient tcp_client{};
-      auto tcp_stream = tcp_client.Connect("localhost", 8080);
+      auto tcp_stream = tcp_client.Connect(addrs[0]);
       char buf[128];
       tcp_stream.ReadExact(buf, 8);
       assert(strcmp(buf, "12345678") == 0);
