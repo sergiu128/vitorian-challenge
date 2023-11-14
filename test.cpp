@@ -69,6 +69,8 @@ void TestMsgHeader() {
 }
 
 void TestLoginRequest() {
+  assert(LoginRequest::EncodedLength() + MsgHeader::EncodedLength() == 109);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
@@ -150,6 +152,8 @@ void TestLoginRequest() {
 }
 
 void TestLoginResponse() {
+  assert(LoginResponse::EncodedLength() + MsgHeader::EncodedLength() == 46);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
@@ -213,6 +217,9 @@ void TestLoginResponse() {
 }
 
 void TestSubmissionRequest() {
+  assert(SubmissionRequest::EncodedLength() + MsgHeader::EncodedLength() ==
+         205);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
@@ -316,6 +323,9 @@ void TestSubmissionRequest() {
 }
 
 void TestSubmissionResponse() {
+  assert(SubmissionResponse::EncodedLength() + MsgHeader::EncodedLength() ==
+         45);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
@@ -376,6 +386,8 @@ void TestSubmissionResponse() {
 }
 
 void TestLogoutRequest() {
+  assert(LogoutRequest::EncodedLength() + MsgHeader::EncodedLength() == 13);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
@@ -396,6 +408,8 @@ void TestLogoutRequest() {
 }
 
 void TestLogoutResponse() {
+  assert(LogoutResponse::EncodedLength() + MsgHeader::EncodedLength() == 45);
+
   // Ensure encoding/decoding works.
   {
     char buf[1024];
