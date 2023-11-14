@@ -44,20 +44,19 @@ class LoginRequest {
     return 0;
   }
 
-  [[nodiscard]] const char *User() const noexcept {
-    return buffer_ + buffer_offset_ + UserEncodingOffset();
+  [[nodiscard]] std::string User() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + UserEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  LoginRequest &User(ClaimFnT &&fn) noexcept {
+  LoginRequest &User(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + UserEncodingOffset();
     size_t max_length = UserEncodingLength() - 1;
-    size_t n_used = fn(b, max_length);
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }
@@ -71,20 +70,19 @@ class LoginRequest {
     return 64;
   }
 
-  [[nodiscard]] const char *Password() const noexcept {
-    return buffer_ + buffer_offset_ + PasswordEncodingOffset();
+  [[nodiscard]] std::string Password() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + PasswordEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  LoginRequest &Password(ClaimFnT &&fn) noexcept {
+  LoginRequest &Password(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + PasswordEncodingOffset();
     size_t max_length = PasswordEncodingLength() - 1;
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    size_t n_used = fn(b, max_length);
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }

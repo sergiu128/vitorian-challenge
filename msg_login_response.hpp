@@ -63,20 +63,19 @@ class LoginResponse {
     return 1;
   }
 
-  [[nodiscard]] const char *Reason() const noexcept {
-    return buffer_ + buffer_offset_ + ReasonEncodingOffset();
+  [[nodiscard]] std::string Reason() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + ReasonEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  LoginResponse &Reason(ClaimFnT &&fn) noexcept {
+  LoginResponse &Reason(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + ReasonEncodingOffset();
     size_t max_length = ReasonEncodingLength() - 1;
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    size_t n_used = fn(b, max_length);
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }

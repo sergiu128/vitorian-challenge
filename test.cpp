@@ -54,11 +54,11 @@ void TestMsgHeader() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = MsgHeader::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = MsgHeader::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      MsgHeader header{buf, InvalidLength, 0};
+      MsgHeader header{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -89,30 +89,10 @@ void TestLoginRequest() {
     assert(req.MsgType() == 'L');
 
     // Encode and check decoding
-    const char* user = "sergiu4096@gmail.com";
-    size_t user_length = strlen(user);
-
-    const char* password = "pwd123";
-    size_t password_length = strlen(password);
-
-    req.User([&](char* slice, size_t max_length) {
-         assert(max_length == LoginRequest::UserEncodingLength() - 1);
-         assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
-                                        req.UserEncodingOffset()));
-
-         memcpy(slice, user, user_length);
-         return user_length;
-       })
-        .Password([&](char* slice, size_t len) {
-          assert(len == req.PasswordEncodingLength() - 1);
-          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
-                                         req.PasswordEncodingOffset()));
-
-          memcpy(slice, password, password_length);
-          return password_length;
-        });
-    assert(strcmp(req.User(), user) == 0);
-    assert(strcmp(req.Password(), password) == 0);
+    req.User("sergiu4096@gmail.com").Password("pwd123");
+    assert(req.User() == "sergiu4096@gmail.com");
+    assert(req.Password() == "pwd123");
+    assert(req.Password().size() == 6);
 
     for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
     for (size_t i = 128 + req.EncodedLength(); i < 1024; i++)
@@ -121,11 +101,11 @@ void TestLoginRequest() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = LoginRequest::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = LoginRequest::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      LoginRequest req{buf, InvalidLength, 0};
+      LoginRequest req{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -134,40 +114,36 @@ void TestLoginRequest() {
 
   // Ensure user is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = LoginRequest::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    LoginRequest req{buf, Length, 0};
+    constexpr size_t kLength = LoginRequest::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    LoginRequest req{buf, kLength, 0};
 
-    req.User([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = LoginRequest::UserEncodingOffset();
-         i < LoginRequest::UserEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[LoginRequest::UserEncodingOffset() +
-               LoginRequest::UserEncodingLength() - 1] == '\0');
+    req.User(std::string(LoginRequest::UserEncodingLength() * 2, 'a'));
+
+    size_t start = LoginRequest::UserEncodingOffset();
+    size_t end = start + LoginRequest::UserEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   // Ensure password is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = LoginRequest::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    LoginRequest req{buf, Length, 0};
+    constexpr size_t kLength = LoginRequest::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    LoginRequest req{buf, kLength, 0};
 
-    req.Password([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'b';
-      return max_length + 2;
-    });
-    for (size_t i = LoginRequest::PasswordEncodingOffset();
-         i < LoginRequest::PasswordEncodingLength() - 1; i++) {
-      assert(buf[i] == 'b');
-    }
-    assert(buf[LoginRequest::PasswordEncodingOffset() +
-               LoginRequest::PasswordEncodingLength() - 1] == '\0');
+    req.Password(std::string(LoginRequest::PasswordEncodingLength() * 2, 'a'));
+
+    size_t start = LoginRequest::PasswordEncodingOffset();
+    size_t end = start + LoginRequest::PasswordEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestLoginRequest done." << std::endl;
@@ -194,20 +170,9 @@ void TestLoginResponse() {
     assert(res.MsgType() == 'E');
 
     // Encode and check decoding
-    char code = 'Y';
-
-    const char* reason = "no reason";
-    size_t reason_length = strlen(reason);
-
-    res.Code(code).Reason([&](char* slice, size_t len) {
-      assert(len == res.ReasonEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
-                                     res.ReasonEncodingOffset()));
-      memcpy(slice, reason, reason_length);
-      return reason_length;
-    });
+    res.Code('Y').Reason("no reason");
     assert(res.Code() == 'Y');
-    assert(strcmp(res.Reason(), reason) == 0);
+    assert(res.Reason() == "no reason");
 
     for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
     for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
@@ -216,11 +181,11 @@ void TestLoginResponse() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = LoginResponse::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = LoginResponse::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      LoginResponse req{buf, InvalidLength, 0};
+      LoginResponse req{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -229,21 +194,19 @@ void TestLoginResponse() {
 
   // Ensure reason is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = LoginResponse::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    LoginResponse res{buf, Length, 0};
+    constexpr size_t kLength = LoginResponse::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    LoginResponse res{buf, kLength, 0};
 
-    res.Reason([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = LoginResponse::ReasonEncodingOffset();
-         i < LoginResponse::ReasonEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[LoginResponse::ReasonEncodingOffset() +
-               LoginResponse::ReasonEncodingLength() - 1] == '\0');
+    res.Reason(std::string(LoginResponse::ReasonEncodingLength() * 2, 'a'));
+
+    size_t start = LoginResponse::ReasonEncodingOffset();
+    size_t end = start + LoginResponse::ReasonEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestLoginResponse done." << std::endl;
@@ -273,39 +236,12 @@ void TestSubmissionRequest() {
     assert(req.MsgType() == 'S');
 
     // Encode and check decoding
-    const char* name = "Sergiu Marin";
-    size_t name_length = strlen(name);
-
-    const char* email = "sergiu4096@gmail.com";
-    size_t email_length = strlen(email);
-
-    const char* repo = "https://github.com/sergiu128/vitorian-challenge";
-    size_t repo_length = strlen(repo);
-
-    req.Name([&](char* slice, size_t len) {
-         assert(len == req.NameEncodingLength() - 1);
-         assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
-                                        req.NameEncodingOffset()));
-         memcpy(slice, name, name_length);
-         return name_length;
-       })
-        .Email([&](char* slice, size_t len) {
-          assert(len == req.EmailEncodingLength() - 1);
-          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
-                                         req.EmailEncodingOffset()));
-          memcpy(slice, email, email_length);
-          return email_length;
-        })
-        .Repo([&](char* slice, size_t len) {
-          assert(len == req.RepoEncodingLength() - 1);
-          assert((void*)slice == (void*)((char*)buf + req.BufferOffset() +
-                                         req.RepoEncodingOffset()));
-          memcpy(slice, repo, repo_length);
-          return repo_length;
-        });
-    assert(strcmp(req.Name(), name) == 0);
-    assert(strcmp(req.Email(), email) == 0);
-    assert(strcmp(req.Repo(), repo) == 0);
+    req.Name("Sergiu Marin")
+        .Email("sergiu4096@gmail.com")
+        .Repo("https://github.com/sergiu128/vitorian-challenge");
+    assert(req.Name() == "Sergiu Marin");
+    assert(req.Email() == "sergiu4096@gmail.com");
+    assert(req.Repo() == "https://github.com/sergiu128/vitorian-challenge");
 
     for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
     for (size_t i = 128 + req.EncodedLength(); i < 1024; i++)
@@ -314,11 +250,11 @@ void TestSubmissionRequest() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = SubmissionRequest::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = SubmissionRequest::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      SubmissionRequest req{buf, InvalidLength, 0};
+      SubmissionRequest req{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -327,59 +263,53 @@ void TestSubmissionRequest() {
 
   // Ensure name is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    SubmissionRequest req{buf, Length, 0};
+    constexpr size_t kLength = SubmissionRequest::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    SubmissionRequest req{buf, kLength, 0};
 
-    req.Name([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = SubmissionRequest::NameEncodingOffset();
-         i < SubmissionRequest::NameEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[SubmissionRequest::NameEncodingOffset() +
-               SubmissionRequest::NameEncodingLength() - 1] == '\0');
+    req.Name(std::string(SubmissionRequest::NameEncodingLength() * 2, 'a'));
+
+    size_t start = SubmissionRequest::NameEncodingOffset();
+    size_t end = start + SubmissionRequest::NameEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   // Ensure email is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    SubmissionRequest req{buf, Length, 0};
+    constexpr size_t kLength = SubmissionRequest::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    SubmissionRequest req{buf, kLength, 0};
 
-    req.Email([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = SubmissionRequest::EmailEncodingOffset();
-         i < SubmissionRequest::EmailEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[SubmissionRequest::EmailEncodingOffset() +
-               SubmissionRequest::EmailEncodingLength() - 1] == '\0');
+    req.Email(std::string(SubmissionRequest::EmailEncodingLength() * 2, 'a'));
+
+    size_t start = SubmissionRequest::EmailEncodingOffset();
+    size_t end = start + SubmissionRequest::EmailEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   // Ensure repo is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = SubmissionRequest::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    SubmissionRequest req{buf, Length, 0};
+    constexpr size_t kLength = SubmissionRequest::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    SubmissionRequest req{buf, kLength, 0};
 
-    req.Repo([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = SubmissionRequest::RepoEncodingOffset();
-         i < SubmissionRequest::RepoEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[SubmissionRequest::RepoEncodingOffset() +
-               SubmissionRequest::RepoEncodingLength() - 1] == '\0');
+    req.Repo(std::string(SubmissionRequest::RepoEncodingLength() * 2, 'a'));
+
+    size_t start = SubmissionRequest::RepoEncodingOffset();
+    size_t end = start + SubmissionRequest::RepoEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestSubmissionRequest done." << std::endl;
@@ -403,17 +333,9 @@ void TestSubmissionResponse() {
     assert(res.MsgType() == 'R');
 
     // Encode and check decoding
-    const char* token = "abcdefghijklmnopqrstuvwxyz";
-    size_t token_length = strlen(token);
-
-    res.Token([&](char* slice, size_t len) {
-      assert(len == res.TokenEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
-                                     res.TokenEncodingOffset()));
-      memcpy(slice, token, token_length);
-      return token_length;
-    });
-    assert(strcmp(res.Token(), token) == 0);
+    std::string token{"abcdefghijklmnopqrstuvwxyz"};
+    res.Token(token);
+    assert(res.Token() == token);
 
     for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
     for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
@@ -422,11 +344,11 @@ void TestSubmissionResponse() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = SubmissionResponse::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = SubmissionResponse::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      SubmissionResponse req{buf, InvalidLength, 0};
+      SubmissionResponse req{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -435,21 +357,19 @@ void TestSubmissionResponse() {
 
   // Ensure token is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = SubmissionResponse::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    SubmissionResponse res{buf, Length, 0};
+    constexpr size_t kLength = SubmissionResponse::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    SubmissionResponse res{buf, kLength, 0};
 
-    res.Token([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = SubmissionResponse::TokenEncodingOffset();
-         i < SubmissionResponse::TokenEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[SubmissionResponse::TokenEncodingOffset() +
-               SubmissionResponse::TokenEncodingLength() - 1] == '\0');
+    res.Token(std::string(SubmissionResponse::TokenEncodingLength() * 2, 'a'));
+
+    size_t start = SubmissionResponse::TokenEncodingOffset();
+    size_t end = start + SubmissionResponse::TokenEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestSubmissionResponse done." << std::endl;
@@ -493,17 +413,8 @@ void TestLogoutResponse() {
     assert(res.MsgType() == 'G');
 
     // Encode and check decoding
-    const char* reason = "no reason";
-    size_t reason_length = strlen(reason);
-
-    res.Reason([&](char* slice, size_t len) {
-      assert(len == res.ReasonEncodingLength() - 1);
-      assert((void*)slice == (void*)((char*)buf + res.BufferOffset() +
-                                     res.ReasonEncodingOffset()));
-      memcpy(slice, reason, reason_length);
-      return reason_length;
-    });
-    assert(strcmp(res.Reason(), reason) == 0);
+    res.Reason("no reason");
+    assert(res.Reason() == "no reason");
 
     for (size_t i = 0; i < 128; i++) assert(buf[i] == 0);
     for (size_t i = 128 + res.EncodedLength(); i < 1024; i++)
@@ -512,11 +423,11 @@ void TestLogoutResponse() {
 
   // Ensure the message can fit in the passed buffer.
   {
-    constexpr size_t InvalidLength = LogoutResponse::EncodedLength() - 1;
-    char buf[InvalidLength];
+    constexpr size_t kInvalidLength = LogoutResponse::EncodedLength() - 1;
+    char buf[kInvalidLength];
     bool ok{false};
     try {
-      LogoutResponse req{buf, InvalidLength, 0};
+      LogoutResponse req{buf, kInvalidLength, 0};
     } catch (const std::exception& e) {
       ok = true;
     }
@@ -525,21 +436,19 @@ void TestLogoutResponse() {
 
   // Ensure reason is truncated if it exceeds its max length.
   {
-    constexpr size_t Length = LogoutResponse::EncodedLength() * 2;
-    char buf[Length];
-    memset(buf, 0, Length);
-    LogoutResponse res{buf, Length, 0};
+    constexpr size_t kLength = LogoutResponse::EncodedLength() * 2;
+    char buf[kLength];
+    memset(buf, 0, kLength);
+    LogoutResponse res{buf, kLength, 0};
 
-    res.Reason([&](char* slice, size_t max_length) {
-      for (size_t i = 0; i < max_length + 2; i++) slice[i] = 'a';
-      return max_length + 2;
-    });
-    for (size_t i = LogoutResponse::ReasonEncodingOffset();
-         i < LogoutResponse::ReasonEncodingLength() - 1; i++) {
-      assert(buf[i] == 'a');
-    }
-    assert(buf[LogoutResponse::ReasonEncodingOffset() +
-               LogoutResponse::ReasonEncodingLength() - 1] == '\0');
+    res.Reason(std::string(LogoutResponse::ReasonEncodingLength() * 2, 'a'));
+
+    size_t start = LogoutResponse::ReasonEncodingOffset();
+    size_t end = start + LogoutResponse::ReasonEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
+    assert(buf[end - 1] == '\0');
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
   std::cout << "TestLogoutResponse done." << std::endl;

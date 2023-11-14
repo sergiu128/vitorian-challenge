@@ -46,20 +46,19 @@ class SubmissionRequest {
     return 0;
   }
 
-  [[nodiscard]] const char *Name() const noexcept {
-    return buffer_ + buffer_offset_ + NameEncodingOffset();
+  [[nodiscard]] std::string Name() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + NameEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  SubmissionRequest &Name(ClaimFnT &&fn) noexcept {
+  SubmissionRequest &Name(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + NameEncodingOffset();
     size_t max_length = NameEncodingLength() - 1;
-    size_t n_used = fn(b, max_length);
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }
@@ -73,20 +72,19 @@ class SubmissionRequest {
     return 64;
   }
 
-  [[nodiscard]] const char *Email() const noexcept {
-    return buffer_ + buffer_offset_ + EmailEncodingOffset();
+  [[nodiscard]] std::string Email() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + EmailEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  SubmissionRequest &Email(ClaimFnT &&fn) noexcept {
+  SubmissionRequest &Email(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + EmailEncodingOffset();
     size_t max_length = EmailEncodingLength() - 1;
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    size_t n_used = fn(b, max_length);
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }
@@ -100,20 +98,19 @@ class SubmissionRequest {
     return 128;
   }
 
-  [[nodiscard]] const char *Repo() const noexcept {
-    return buffer_ + buffer_offset_ + RepoEncodingOffset();
+  [[nodiscard]] std::string Repo() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + RepoEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  SubmissionRequest &Repo(ClaimFnT &&fn) noexcept {
+  SubmissionRequest &Repo(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + RepoEncodingOffset();
     size_t max_length = RepoEncodingLength() - 1;
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    size_t n_used = fn(b, max_length);
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }

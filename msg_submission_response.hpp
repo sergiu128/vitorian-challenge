@@ -44,20 +44,19 @@ class SubmissionResponse {
     return 0;
   }
 
-  [[nodiscard]] const char *Token() const noexcept {
-    return buffer_ + buffer_offset_ + TokenEncodingOffset();
+  [[nodiscard]] std::string Token() const noexcept {
+    const char *b = buffer_ + buffer_offset_ + TokenEncodingOffset();
+    return std::string{b};
   }
 
-  template <typename ClaimFnT>
-  SubmissionResponse &Token(ClaimFnT &&fn) noexcept {
+  SubmissionResponse &Token(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + TokenEncodingOffset();
     size_t max_length = TokenEncodingLength() - 1;
-    size_t n_used = fn(b, max_length);
+    size_t len = val.size();
+    if (len > max_length) len = max_length;
 
-    if (n_used > max_length) {
-      n_used = max_length;
-    }
-    *(b + n_used) = '\0';
+    memcpy(b, val.c_str(), len);
+    *(b + len) = '\0';
 
     return *this;
   }
