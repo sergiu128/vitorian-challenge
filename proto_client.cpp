@@ -11,8 +11,7 @@
 #include "msg_logout_response.hpp"
 #include "msg_submission_request.hpp"
 #include "msg_submission_response.hpp"
-
-// TODO timestamps
+#include "util.hpp"
 
 bool ProtoClient::Run(const char* addr, int port) {
   std::vector<Resolver::Addr> addrs{};
@@ -65,7 +64,10 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     auto len = header.EncodedLength() + req.EncodedLength();
 
-    header.MsgType(req.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
+    header.MsgType(req.MsgType())
+        .MsgLen(len)
+        .Timestamp(EpochNanos())
+        .Checksum(0);
     req.User("sergiu4096@gmail.com").Password("pwd123");
     header.Checksum(Checksum(buf, len));
 
@@ -129,7 +131,10 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     auto len = header.EncodedLength() + req.EncodedLength();
 
-    header.MsgType(req.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
+    header.MsgType(req.MsgType())
+        .MsgLen(len)
+        .Timestamp(EpochNanos())
+        .Checksum(0);
     req.Name("Sergiu Marin")
         .Email("sergiu4096@gmail.com")
         .Repo("https://github.com/sergiu128/vitorian-challenge");
@@ -187,7 +192,10 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     auto len = header.EncodedLength() + req.EncodedLength();
 
-    header.MsgType(req.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
+    header.MsgType(req.MsgType())
+        .MsgLen(len)
+        .Timestamp(EpochNanos())
+        .Checksum(0);
     header.Checksum(Checksum(buf, len));
 
     stream.WriteExact(buf, len);

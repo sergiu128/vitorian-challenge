@@ -19,6 +19,7 @@
 #include "resolver.hpp"
 #include "tcp_client.hpp"
 #include "tcp_server.hpp"
+#include "util.hpp"
 
 void TestMsgHeader() {
   // Ensure encoding/decoding works.
@@ -579,7 +580,8 @@ void TestProtoClient() {
       stream.ReadExact(buf, header.EncodedLength());
       assert(header.MsgType() == 'L');
       assert(header.MsgLen() == 109);
-      // TODO assert timestamp
+      auto time_diff = EpochNanos() - header.Timestamp();
+      assert(0 < time_diff && time_diff < 1'000'000'000);
       // TODO assert checksum
 
       LoginRequest req{buf, 1024, header.EncodedLength()};
@@ -604,6 +606,11 @@ void TestProtoClient() {
   std::cout << "TestProtoClient done." << std::endl;
 }
 
+void TestTimestamp() {
+  std::cout << EpochNanos() << std::endl;
+  std::cout << "TestTimestamp done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -615,6 +622,7 @@ int main() {
   TestTcp();
   TestResolver();
   TestProtoClient();
+  TestTimestamp();
 
   std::cout << "Bye." << std::endl;
 }
