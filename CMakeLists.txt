@@ -12,7 +12,13 @@ add_compile_options(
     -Wno-missing-field-initializers
     -Werror=format)
 
-add_executable(main main.cpp)
+add_executable(client
+    client.cpp
+    tcp_client.cpp
+    tcp_stream.cpp
+    resolver.cpp
+    proto_client.cpp)
+
 add_executable(test
     test.cpp
     tcp_client.cpp
