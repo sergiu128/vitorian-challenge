@@ -567,6 +567,7 @@ void TestProtoClient() {
     ProtoClient client{};
     client.Run(addr, port);
     thread.join();
+    assert(client.Token() == "");
   }
 
   std::cout << "--- login_req -> logout_req with wrong checksum ---"
@@ -599,6 +600,7 @@ void TestProtoClient() {
     ProtoClient client{};
     client.Run(addr, port);
     thread.join();
+    assert(client.Token() == "");
   }
 
   std::cout << "--- login_req -> logout_req with right checksum ---"
@@ -632,6 +634,90 @@ void TestProtoClient() {
     ProtoClient client{};
     client.Run(addr, port);
     thread.join();
+    assert(client.Token() == "");
+  }
+
+  std::cout << "--- login,submit,logout successully ---" << std::endl;
+  {
+    auto thread = run_server(addr, port, [](TcpStream& stream) {
+      char buf[1024];
+      MsgHeader header{buf, 1024, 0};
+
+      // read login request and write login response
+      {
+        stream.ReadExact(buf, header.EncodedLength());
+        assert(header.MsgType() == 'L');
+        assert(header.MsgLen() == 109);
+        auto time_diff = EpochNanos() - header.Timestamp();
+        assert(0 < time_diff && time_diff < 1'000'000'000);
+
+        LoginRequest req{buf, 1024, header.EncodedLength()};
+        stream.ReadExact(buf + header.EncodedLength(), req.EncodedLength());
+        assert(req.User() == "sergiu4096@gmail.com");
+        assert(req.Password() == "pwd123");
+
+        LoginResponse res{buf, 1024, header.EncodedLength()};
+        auto len = header.EncodedLength() + res.EncodedLength();
+        header.MsgType(res.MsgType())
+            .MsgLen(len)
+            .Timestamp(EpochNanos())
+            .Checksum(0);
+        res.Code('Y').Reason("");
+        Checksum(buf, len, header);
+        stream.WriteExact(buf, len);
+      }
+
+      // read submission request and write submission response
+      {
+        stream.ReadExact(buf, header.EncodedLength());
+        assert(header.MsgType() == 'S');
+        assert(header.MsgLen() == 205);
+        auto time_diff = EpochNanos() - header.Timestamp();
+        assert(0 < time_diff && time_diff < 1'000'000'000);
+
+        SubmissionRequest req{buf, 1024, header.EncodedLength()};
+        stream.ReadExact(buf + header.EncodedLength(), req.EncodedLength());
+        assert(req.Name() == "Sergiu Marin");
+        assert(req.Email() == "sergiu4096@gmail.com");
+        assert(req.Repo() == "https://github.com/sergiu128/vitorian-challenge");
+
+        SubmissionResponse res{buf, 1024, header.EncodedLength()};
+        auto len = header.EncodedLength() + res.EncodedLength();
+        header.MsgType(res.MsgType())
+            .MsgLen(len)
+            .Timestamp(EpochNanos())
+            .Checksum(0);
+        res.Token("token123");
+        Checksum(buf, len, header);
+        stream.WriteExact(buf, len);
+      }
+
+      // read logout request and write logout response
+      {
+        stream.ReadExact(buf, header.EncodedLength());
+        assert(header.MsgType() == 'O');
+        assert(header.MsgLen() == 13);
+        auto time_diff = EpochNanos() - header.Timestamp();
+        assert(0 < time_diff && time_diff < 1'000'000'000);
+
+        // logout request has no payload, it's just the header
+
+        LogoutResponse res{buf, 1024, header.EncodedLength()};
+        auto len = header.EncodedLength() + res.EncodedLength();
+        header.MsgType(res.MsgType())
+            .MsgLen(len)
+            .Timestamp(EpochNanos())
+            .Checksum(0);
+        Checksum(buf, len, header);
+        stream.WriteExact(buf, len);
+      }
+
+      sleep(1);
+    });
+    ProtoClient client{};
+    client.Run(addr, port);
+    thread.join();
+    assert(client.Token() == "token123");
   }
 
   std::cout << "TestProtoClient done." << std::endl;

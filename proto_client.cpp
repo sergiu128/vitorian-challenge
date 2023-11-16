@@ -47,6 +47,8 @@ bool ProtoClient::Run(const char* addr, int port) {
 }
 
 bool ProtoClient::RunOne(const Resolver::Addr& addr) {
+  token_ = "";
+
   std::cout << "(proto-client) connecting to addr=" << addr.addr_str
             << " port=" << addr.port << std::endl;
 
@@ -161,6 +163,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       std::cout << "(proto-client) received submission response token="
                 << res.Token() << std::endl;
+
+      token_ = res.Token();
     } else if (header.MsgType() == LogoutResponse::MsgType()) {
       LogoutResponse res{buf, 1024, header.EncodedLength()};
       auto len = header.EncodedLength() + res.EncodedLength();
