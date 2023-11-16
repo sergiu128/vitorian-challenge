@@ -64,6 +64,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
   // Write LoginRequest
   {
+    std::cout << "(proto-client) sending login request" << std::endl;
+
     MsgHeader header{buf, 1024, 0};
     LoginRequest req{buf, 1024, header.EncodedLength()};
 

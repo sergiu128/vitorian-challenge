@@ -14,6 +14,8 @@
 #include <string>
 #include <system_error>
 
+#include "net.hpp"
+
 TcpStream TcpClient::Connect(const Resolver::Addr& addr) {
   std::cout << "(tcp-client) trying to connect to addr=" << addr.addr_str
             << " port=" << addr.port << std::endl;
@@ -26,7 +28,7 @@ TcpStream TcpClient::Connect(const Resolver::Addr& addr) {
     throw std::system_error(errno, std::generic_category());
   }
 
-  if (connect(sockfd, addr.addr, addr.addr_len) != 0) {
+  if (!ConnectWithTimeout(sockfd, addr)) {
     std::cout << "ERR(tcp-client) could not connect to " << addr.addr_str
               << std::endl;
     close(sockfd);
