@@ -31,6 +31,10 @@ bool ProtoClient::Run(const char* addr, int port) {
   std::cout << "(proto-client) addr=" << addr << " resolved to " << addrs.size()
             << " addresses" << std::endl;
 
+  return Run(addrs);
+}
+
+bool ProtoClient::Run(const std::vector<Resolver::Addr>& addrs) {
   for (const auto& resolved_addr : addrs) {
     std::cout << "(proto-client) trying on " << resolved_addr.addr_str
               << std::endl;
@@ -39,8 +43,7 @@ bool ProtoClient::Run(const char* addr, int port) {
       if (RunOne(resolved_addr)) return true;
     } catch (std::exception& e) {
       std::cout << "(proto-client) could not run on addr="
-                << resolved_addr.addr_str << "(" << addr << ")"
-                << " err=" << e.what() << std::endl;
+                << resolved_addr.addr_str << " err=" << e.what() << std::endl;
     }
   }
   return false;

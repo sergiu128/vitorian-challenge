@@ -19,12 +19,12 @@ class ProtoClient {
   ProtoClient& operator=(ProtoClient&&) = delete;
 
   bool Run(const char* addr, int port);
+  bool Run(const std::vector<Resolver::Addr>& addrs);
+  bool RunOne(const Resolver::Addr& addr);
 
   std::string Token() const noexcept { return token_; }
 
  private:
-  bool RunOne(const Resolver::Addr& addr);
-
   TcpClient client_{};
   Resolver resolver_{};
   std::string token_{};
