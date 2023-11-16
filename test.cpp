@@ -611,6 +611,52 @@ void TestTimestamp() {
   std::cout << "TestTimestamp done." << std::endl;
 }
 
+void TestChecksum() {
+  // Just the header
+  {
+    char buf[128];
+    MsgHeader header{buf, 128, 0};
+
+    header.MsgType('A')
+        .MsgLen(header.EncodedLength())
+        .Timestamp(EpochNanos())
+        .Checksum(0);
+    assert(header.Checksum() == 0);
+
+    Checksum(buf, header.EncodedLength(), header);
+    assert(header.Checksum() != 0);
+
+    Checksum(buf, header.EncodedLength(), header);
+    assert(header.Checksum() == 0);
+  }
+
+  // Submission request
+  {
+    char buf[1024];
+    MsgHeader header{buf, 1024, 0};
+    SubmissionRequest req{buf, 1024, header.EncodedLength()};
+    auto len = header.EncodedLength() + req.EncodedLength();
+
+    header.MsgType(req.MsgType())
+        .MsgLen(len)
+        .Timestamp(EpochNanos())
+        .Checksum(0);
+    req.Name("Sergiu Marin")
+        .Email("sergiu4096@gmail.com")
+        .Repo("https://github.com/sergiu128/vitorian-challenge");
+
+    assert(header.Checksum() == 0);
+
+    Checksum(buf, len, header);
+    assert(header.Checksum() != 0);
+
+    Checksum(buf, len, header);
+    assert(header.Checksum() == 0);
+  }
+
+  std::cout << "TestChecksum done." << std::endl;
+}
+
 int main() {
   TestMsgHeader();
   TestLoginRequest();
@@ -623,6 +669,7 @@ int main() {
   TestResolver();
   TestProtoClient();
   TestTimestamp();
+  TestChecksum();
 
   std::cout << "Bye." << std::endl;
 }

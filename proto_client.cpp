@@ -69,7 +69,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
         .Timestamp(EpochNanos())
         .Checksum(0);
     req.User("sergiu4096@gmail.com").Password("pwd123");
-    header.Checksum(Checksum(buf, len));
+    Checksum(buf, len, header);
 
     stream.WriteExact(buf, len);
 
@@ -88,7 +88,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
       if (res.Code() == 'Y') {
-        if (Checksum(buf, len) != header.Checksum()) {
+        Checksum(buf, len, header);
+        if (header.Checksum() != 0) {
           std::string err{"(proto-client) invalid login response checksum"};
           std::cout << err << std::endl;
           throw std::runtime_error(err);
@@ -109,7 +110,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
-      if (Checksum(buf, len) != header.Checksum()) {
+      Checksum(buf, len, header);
+      if (header.Checksum() != 0) {
         std::string err{"(proto-client) invalid logout response checksum"};
         std::cout << err << std::endl;
         throw std::runtime_error(err);
@@ -138,7 +140,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
     req.Name("Sergiu Marin")
         .Email("sergiu4096@gmail.com")
         .Repo("https://github.com/sergiu128/vitorian-challenge");
-    header.Checksum(Checksum(buf, len));
+    Checksum(buf, len, header);
 
     stream.WriteExact(buf, len);
 
@@ -156,7 +158,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
-      if (Checksum(buf, len) != header.Checksum()) {
+      Checksum(buf, len, header);
+      if (header.Checksum() != 0) {
         std::string err{"(proto-client) invalid submission response checksum"};
         std::cout << err << std::endl;
         throw std::runtime_error(err);
@@ -170,7 +173,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
-      if (Checksum(buf, len) != header.Checksum()) {
+      Checksum(buf, len, header);
+      if (header.Checksum() != 0) {
         std::string err{"(proto-client) invalid logout response checksum"};
         std::cout << err << std::endl;
         throw std::runtime_error(err);
@@ -196,7 +200,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
         .MsgLen(len)
         .Timestamp(EpochNanos())
         .Checksum(0);
-    header.Checksum(Checksum(buf, len));
+    Checksum(buf, len, header);
 
     stream.WriteExact(buf, len);
 
@@ -211,7 +215,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     stream.ReadExact(buf, len);
 
-    if (Checksum(buf, len) != header.Checksum()) {
+    Checksum(buf, len, header);
+    if (header.Checksum() != 0) {
       std::string err{"(proto-client) invalid logout response checksum"};
       std::cout << err << std::endl;
       throw std::runtime_error(err);
