@@ -53,6 +53,8 @@ void TcpStream::Close() noexcept {
   }
 }
 
+// Read exactly len bytes into b. The caller must ensure b is pointing to memory
+// of size at least len.
 void TcpStream::ReadExact(char* b, size_t len) {
   if (sockfd_ <= 0) {
     throw std::runtime_error("cannot read from an unitialized stream");
@@ -70,6 +72,8 @@ void TcpStream::ReadExact(char* b, size_t len) {
   }
 }
 
+// Write exactly len bytes from b. The caller is reponsible for b pointing to
+// memory of size at least len.
 void TcpStream::WriteExact(const char* b, size_t len) {
   if (sockfd_ <= 0) {
     throw std::runtime_error("cannot read from an unitialized stream");

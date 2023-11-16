@@ -5,6 +5,16 @@
 #include "endian.hpp"
 #include "msg_header.hpp"
 
+// Compute the IP checksum of the bytes in b of length len that the header is
+// also part of.
+//
+// If computing the checksum, callers must ensure the checksum is 0 in the
+// passed MsgHeader before the call. The checksum of the rest of the bytes is
+// then places in the header.
+//
+// If verifying the checksum, callers must ensure to have some checksum set in
+// the header before this call. If the checksum is valid and the verification
+// succeeds, the header will contain 0 in its checksum field after this call.
 inline void Checksum(const char* b, uint32_t len, MsgHeader& header) {
   uint16_t checksum = header.Checksum();
   header.Checksum(0);

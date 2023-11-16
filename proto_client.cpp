@@ -13,6 +13,8 @@
 #include "msg_submission_response.hpp"
 #include "util.hpp"
 
+// Runs the client login,submit,logout sequence on the IPs resolved from the
+// given address and port.
 bool ProtoClient::Run(const char* addr, int port) {
   std::vector<Resolver::Addr> addrs{};
   try {
@@ -34,6 +36,7 @@ bool ProtoClient::Run(const char* addr, int port) {
   return Run(addrs);
 }
 
+// Runs the client login,submit,logout sequence on the set of resolved IPs.
 bool ProtoClient::Run(const std::vector<Resolver::Addr>& addrs) {
   for (const auto& resolved_addr : addrs) {
     std::cout << std::endl;
@@ -50,6 +53,8 @@ bool ProtoClient::Run(const std::vector<Resolver::Addr>& addrs) {
   return false;
 }
 
+// Given the address, runs the client login,submit,logout sequence. Throws if
+// anything goes wrong.
 bool ProtoClient::RunOne(const Resolver::Addr& addr) {
   token_ = "";
 
