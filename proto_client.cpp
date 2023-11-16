@@ -87,22 +87,18 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
-      if (res.Code() == 'Y') {
-        Checksum(buf, len, header);
-        if (header.Checksum() != 0) {
-          std::string err{"(proto-client) invalid login response checksum"};
-          std::cout << err << std::endl;
-          throw std::runtime_error(err);
-        }
+      Checksum(buf, len, header);
+      if (header.Checksum() != 0) {
+        throw std::runtime_error(
+            "(proto-client) invalid login response checksum");
+      }
 
+      if (res.Code() == 'Y') {
         std::cout << "(proto-client) logged in code=" << res.Code()
                   << " reason=" << res.Reason() << std::endl;
       } else {
-        std::string err{"(proto-client) could not login"};
-        err += " code=" + std::string{res.Code()};
-        err += " reason=" + res.Reason();
-        std::cout << err << std::endl;
-        throw std::runtime_error(err);
+        throw std::runtime_error("(proto-client) could not login reason=" +
+                                 res.Reason());
       }
     } else if (header.MsgType() == LogoutResponse::MsgType()) {
       LogoutResponse res{buf, 1024, header.EncodedLength()};
@@ -112,9 +108,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
-        std::string err{"(proto-client) invalid logout response checksum"};
-        std::cout << err << std::endl;
-        throw std::runtime_error(err);
+        throw std::runtime_error(
+            "(proto-client) invalid logout response checksum");
       }
 
       std::cout << "(proto-client) received logout response reason="
@@ -160,9 +155,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
-        std::string err{"(proto-client) invalid submission response checksum"};
-        std::cout << err << std::endl;
-        throw std::runtime_error(err);
+        throw std::runtime_error(
+            "(proto-client) invalid submission response checksum");
       }
 
       std::cout << "(proto-client) received submission response token="
@@ -175,9 +169,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
-        std::string err{"(proto-client) invalid logout response checksum"};
-        std::cout << err << std::endl;
-        throw std::runtime_error(err);
+        throw std::runtime_error(
+            "(proto-client) invalid logout response checksum");
       }
 
       std::cout << "(proto-client) received logout response reason="
@@ -217,9 +210,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     Checksum(buf, len, header);
     if (header.Checksum() != 0) {
-      std::string err{"(proto-client) invalid logout response checksum"};
-      std::cout << err << std::endl;
-      throw std::runtime_error(err);
+      throw std::runtime_error(
+          "(proto-client) invalid logout response checksum");
     }
 
     std::cout << "(proto-client) received logout response reason="
