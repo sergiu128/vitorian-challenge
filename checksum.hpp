@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "endian.hpp"
 #include "msg_header.hpp"
 
 inline void Checksum(const char* b, uint32_t len, MsgHeader& header) {
@@ -10,7 +11,8 @@ inline void Checksum(const char* b, uint32_t len, MsgHeader& header) {
 
   uint32_t sum = checksum;
   for (uint32_t j = 0; j < len - 1; j += 2) {
-    sum += *((uint16_t*)(&b[j]));
+    uint16_t value = *((uint16_t*)(&b[j]));
+    sum += LITTLE_ENDIAN_ENCODE_16(value);
   }
   if ((len & 1) != 0) {
     sum += *((uint8_t*)(&b[len - 1]));
