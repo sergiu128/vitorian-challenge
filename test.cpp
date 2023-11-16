@@ -560,7 +560,7 @@ void TestProtoClient() {
   const char* addr = "localhost";
   int port = 8088;
 
-  std::cout << "---------------------------" << std::endl;
+  std::cout << "--- server closes immediately ---" << std::endl;
   // server closes the connection immediately
   {
     auto thread = run_server(addr, port, [](TcpStream&) {});
@@ -569,9 +569,8 @@ void TestProtoClient() {
     thread.join();
   }
 
-  std::cout << "---------------------------" << std::endl;
-  // server checks LoginRequest and replies with a LogoutResponse with the wrong
-  // checksum
+  std::cout << "--- login_req -> logout_req with wrong checksum ---"
+            << std::endl;
   {
     auto thread = run_server(addr, port, [](TcpStream& stream) {
       char buf[1024];
@@ -582,7 +581,6 @@ void TestProtoClient() {
       assert(header.MsgLen() == 109);
       auto time_diff = EpochNanos() - header.Timestamp();
       assert(0 < time_diff && time_diff < 1'000'000'000);
-      // TODO assert checksum
 
       LoginRequest req{buf, 1024, header.EncodedLength()};
       stream.ReadExact(buf + header.EncodedLength(), req.EncodedLength());
@@ -593,6 +591,39 @@ void TestProtoClient() {
       auto len = header.EncodedLength() + res.EncodedLength();
       header.MsgType(res.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
       res.Reason("test");
+
+      stream.WriteExact(buf, len);
+
+      sleep(1);
+    });
+    ProtoClient client{};
+    client.Run(addr, port);
+    thread.join();
+  }
+
+  std::cout << "--- login_req -> logout_req with right checksum ---"
+            << std::endl;
+  {
+    auto thread = run_server(addr, port, [](TcpStream& stream) {
+      char buf[1024];
+
+      MsgHeader header{buf, 1024, 0};
+      stream.ReadExact(buf, header.EncodedLength());
+      assert(header.MsgType() == 'L');
+      assert(header.MsgLen() == 109);
+      auto time_diff = EpochNanos() - header.Timestamp();
+      assert(0 < time_diff && time_diff < 1'000'000'000);
+
+      LoginRequest req{buf, 1024, header.EncodedLength()};
+      stream.ReadExact(buf + header.EncodedLength(), req.EncodedLength());
+      assert(req.User() == "sergiu4096@gmail.com");
+      assert(req.Password() == "pwd123");
+
+      LogoutResponse res{buf, 1024, header.EncodedLength()};
+      auto len = header.EncodedLength() + res.EncodedLength();
+      header.MsgType(res.MsgType()).MsgLen(len).Timestamp(0).Checksum(0);
+      res.Reason("test");
+      Checksum(buf, len, header);
 
       stream.WriteExact(buf, len);
 
