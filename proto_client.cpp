@@ -36,6 +36,7 @@ bool ProtoClient::Run(const char* addr, int port) {
 
 bool ProtoClient::Run(const std::vector<Resolver::Addr>& addrs) {
   for (const auto& resolved_addr : addrs) {
+    std::cout << std::endl;
     std::cout << "(proto-client) trying on " << resolved_addr.addr_str
               << std::endl;
 
