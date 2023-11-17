@@ -119,6 +119,22 @@ void TestLoginRequest() {
     assert(ok);
   }
 
+  // Ensure user bytes are all zeroes if user is empty
+  {
+    constexpr size_t kLength = LoginRequest::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    LoginRequest req{buf, kLength, 0};
+
+    req.User("");
+
+    size_t start = LoginRequest::UserEncodingOffset();
+    size_t end = start + LoginRequest::UserEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
+  }
+
   // Ensure user is truncated if it exceeds its max length.
   {
     constexpr size_t kLength = LoginRequest::EncodedLength() * 2;
@@ -133,6 +149,22 @@ void TestLoginRequest() {
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
+  }
+
+  // Ensure password bytes are all zeroes if password is empty
+  {
+    constexpr size_t kLength = LoginRequest::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    LoginRequest req{buf, kLength, 0};
+
+    req.Password("");
+
+    size_t start = LoginRequest::PasswordEncodingOffset();
+    size_t end = start + LoginRequest::PasswordEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
   }
 
   // Ensure password is truncated if it exceeds its max length.
@@ -197,6 +229,22 @@ void TestLoginResponse() {
       ok = true;
     }
     assert(ok);
+  }
+
+  // Ensure reason bytes are all zeroes if reason is empty
+  {
+    constexpr size_t kLength = LoginResponse::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    LoginResponse req{buf, kLength, 0};
+
+    req.Reason("");
+
+    size_t start = LoginResponse::ReasonEncodingOffset();
+    size_t end = start + LoginResponse::ReasonEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
   }
 
   // Ensure reason is truncated if it exceeds its max length.
@@ -270,6 +318,22 @@ void TestSubmissionRequest() {
     assert(ok);
   }
 
+  // Ensure name bytes are all zeroes if name is empty
+  {
+    constexpr size_t kLength = SubmissionRequest::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    SubmissionRequest req{buf, kLength, 0};
+
+    req.Name("");
+
+    size_t start = SubmissionRequest::NameEncodingOffset();
+    size_t end = start + SubmissionRequest::NameEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
+  }
+
   // Ensure name is truncated if it exceeds its max length.
   {
     constexpr size_t kLength = SubmissionRequest::EncodedLength() * 2;
@@ -286,6 +350,22 @@ void TestSubmissionRequest() {
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
+  // Ensure email bytes are all zeroes if email is empty
+  {
+    constexpr size_t kLength = SubmissionRequest::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    SubmissionRequest req{buf, kLength, 0};
+
+    req.Email("");
+
+    size_t start = SubmissionRequest::EmailEncodingOffset();
+    size_t end = start + SubmissionRequest::EmailEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
+  }
+
   // Ensure email is truncated if it exceeds its max length.
   {
     constexpr size_t kLength = SubmissionRequest::EncodedLength() * 2;
@@ -300,6 +380,22 @@ void TestSubmissionRequest() {
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
+  }
+
+  // Ensure repo bytes are all zeroes if repo is empty
+  {
+    constexpr size_t kLength = SubmissionRequest::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    SubmissionRequest req{buf, kLength, 0};
+
+    req.Repo("");
+
+    size_t start = SubmissionRequest::RepoEncodingOffset();
+    size_t end = start + SubmissionRequest::RepoEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
   }
 
   // Ensure repo is truncated if it exceeds its max length.
@@ -362,6 +458,22 @@ void TestSubmissionResponse() {
       ok = true;
     }
     assert(ok);
+  }
+
+  // Ensure token bytes are all zeroes if token is empty
+  {
+    constexpr size_t kLength = SubmissionResponse::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    SubmissionResponse res{buf, kLength, 0};
+
+    res.Token("");
+
+    size_t start = SubmissionResponse::TokenEncodingOffset();
+    size_t end = start + SubmissionResponse::TokenEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
   }
 
   // Ensure token is truncated if it exceeds its max length.
@@ -444,6 +556,22 @@ void TestLogoutResponse() {
       ok = true;
     }
     assert(ok);
+  }
+
+  // Ensure reason bytes are all zeroes if reason is empty
+  {
+    constexpr size_t kLength = LogoutResponse::EncodedLength();
+    char buf[kLength];
+    memset(buf, 'a', kLength);
+    LogoutResponse res{buf, kLength, 0};
+
+    res.Reason("");
+
+    size_t start = LogoutResponse::ReasonEncodingOffset();
+    size_t end = start + LogoutResponse::ReasonEncodingLength();
+    for (size_t i = 0; i < start; i++) assert(buf[i] == 'a');
+    for (size_t i = start; i < end - 1; i++) assert(buf[i] == 0);
+    for (size_t i = end; i < kLength; i++) assert(buf[i] == 'a');
   }
 
   // Ensure reason is truncated if it exceeds its max length.
