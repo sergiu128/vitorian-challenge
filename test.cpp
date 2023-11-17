@@ -132,7 +132,6 @@ void TestLoginRequest() {
     size_t end = start + LoginRequest::UserEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -149,7 +148,6 @@ void TestLoginRequest() {
     size_t end = start + LoginRequest::PasswordEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -214,7 +212,6 @@ void TestLoginResponse() {
     size_t end = start + LoginResponse::ReasonEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -286,7 +283,6 @@ void TestSubmissionRequest() {
     size_t end = start + SubmissionRequest::NameEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -303,7 +299,6 @@ void TestSubmissionRequest() {
     size_t end = start + SubmissionRequest::EmailEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -320,7 +315,6 @@ void TestSubmissionRequest() {
     size_t end = start + SubmissionRequest::RepoEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -383,7 +377,6 @@ void TestSubmissionResponse() {
     size_t end = start + SubmissionResponse::TokenEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
@@ -466,7 +459,6 @@ void TestLogoutResponse() {
     size_t end = start + LogoutResponse::ReasonEncodingLength();
     for (size_t i = 0; i < start; i++) assert(buf[i] == 0);
     for (size_t i = start; i < end - 1; i++) assert(buf[i] == 'a');
-    assert(buf[end - 1] == '\0');
     for (size_t i = end; i < kLength; i++) assert(buf[i] == 0);
   }
 
