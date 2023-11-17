@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 class LogoutRequest {
@@ -34,6 +35,10 @@ class LogoutRequest {
   [[nodiscard]] const char *Buffer() const noexcept { return buffer_; }
   [[nodiscard]] size_t BufferLength() const noexcept { return buffer_length_; }
   [[nodiscard]] size_t BufferOffset() const noexcept { return buffer_offset_; }
+
+  friend std::ostream &operator<<(std::ostream &os, const LogoutRequest &) {
+    return os;
+  }
 
  private:
   char *buffer_;

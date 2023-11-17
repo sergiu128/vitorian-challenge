@@ -86,7 +86,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     stream.WriteExact(buf, len);
 
-    std::cout << "(proto-client) sent login request" << std::endl;
+    std::cout << "(proto-client) sent " << header << " " << req << std::endl;
   }
 
   // Read response: LoginResponse (success) or LogoutResponse (failure)
@@ -94,11 +94,15 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
     MsgHeader header{buf, 1024, 0};
     stream.ReadExact(buf, header.EncodedLength());
 
+    std::cout << "(proto-client) received " << header << std::endl;
+
     if (header.MsgType() == LoginResponse::MsgType()) {
       LoginResponse res{buf, 1024, header.EncodedLength()};
       auto len = header.EncodedLength() + res.EncodedLength();
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
+
+      std::cout << "(proto-client) received " << res << std::endl;
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
@@ -119,14 +123,13 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
 
+      std::cout << "(proto-client) received " << res << std::endl;
+
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
         throw std::runtime_error(
             "(proto-client) invalid logout response checksum");
       }
-
-      std::cout << "(proto-client) received logout response reason="
-                << res.Reason() << std::endl;
 
       return false;
     } else {
@@ -152,7 +155,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     stream.WriteExact(buf, len);
 
-    std::cout << "(proto-client) sent submission request" << std::endl;
+    std::cout << "(proto-client) sent " << header << " " << req << std::endl;
   }
 
   // Read response: SubmissionResponse (success) or LogoutResponse (failure)
@@ -160,11 +163,15 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
     MsgHeader header{buf, 1024, 0};
     stream.ReadExact(buf, header.EncodedLength());
 
+    std::cout << "(proto-client) received " << header << std::endl;
+
     if (header.MsgType() == SubmissionResponse::MsgType()) {
       SubmissionResponse res{buf, 1024, header.EncodedLength()};
       auto len = header.EncodedLength() + res.EncodedLength();
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
+
+      std::cout << "(proto-client) received " << res << std::endl;
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
@@ -181,6 +188,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
       auto len = header.EncodedLength() + res.EncodedLength();
 
       stream.ReadExact(buf + header.EncodedLength(), res.EncodedLength());
+
+      std::cout << "(proto-client) received " << res << std::endl;
 
       Checksum(buf, len, header);
       if (header.Checksum() != 0) {
@@ -212,7 +221,7 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
 
     stream.WriteExact(buf, len);
 
-    std::cout << "(proto-client) sent logout request" << std::endl;
+    std::cout << "(proto-client) sent " << header << " " << req << std::endl;
   }
 
   // Read logout response
@@ -222,6 +231,8 @@ bool ProtoClient::RunOne(const Resolver::Addr& addr) {
     auto len = header.EncodedLength() + res.EncodedLength();
 
     stream.ReadExact(buf, len);
+
+    std::cout << "(proto-client) received " << res << std::endl;
 
     Checksum(buf, len, header);
     if (header.Checksum() != 0) {

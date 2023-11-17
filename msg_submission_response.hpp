@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 class SubmissionResponse {
@@ -51,14 +52,18 @@ class SubmissionResponse {
 
   SubmissionResponse &Token(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + TokenEncodingOffset();
-    size_t max_length = TokenEncodingLength() - 1;
-    size_t len = val.size();
-    if (len > max_length) len = max_length;
+    size_t len = std::min(val.size(), TokenEncodingLength());
 
     memcpy(b, val.c_str(), len);
-    *(b + len) = '\0';
+    memset(b + len, 0, TokenEncodingLength() - len);
 
     return *this;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const SubmissionResponse &res) {
+    os << "submission_response token=" << res.Token();
+    return os;
   }
 
  private:

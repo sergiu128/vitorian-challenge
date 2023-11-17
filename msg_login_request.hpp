@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 class LoginRequest {
@@ -51,12 +52,10 @@ class LoginRequest {
 
   LoginRequest &User(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + UserEncodingOffset();
-    size_t max_length = UserEncodingLength() - 1;
-    size_t len = val.size();
-    if (len > max_length) len = max_length;
+    size_t len = std::min(val.size(), UserEncodingLength());
 
     memcpy(b, val.c_str(), len);
-    *(b + len) = '\0';
+    memset(b + len, 0, UserEncodingLength() - len);
 
     return *this;
   }
@@ -77,14 +76,17 @@ class LoginRequest {
 
   LoginRequest &Password(const std::string &val) noexcept {
     char *b = buffer_ + buffer_offset_ + PasswordEncodingOffset();
-    size_t max_length = PasswordEncodingLength() - 1;
-    size_t len = val.size();
-    if (len > max_length) len = max_length;
+    size_t len = std::min(val.size(), PasswordEncodingLength());
 
     memcpy(b, val.c_str(), len);
-    *(b + len) = '\0';
+    memset(b + len, 0, PasswordEncodingLength() - len);
 
     return *this;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const LoginRequest &req) {
+    os << "login_request user=" << req.User() << " password=" << req.Password();
+    return os;
   }
 
  private:

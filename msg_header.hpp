@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 #include "endian.hpp"
@@ -122,6 +123,13 @@ class MsgHeader {
     std::memcpy(buffer_ + buffer_offset_ + ChecksumEncodingOffset(), &value,
                 sizeof(uint16_t));
     return *this;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const MsgHeader &header) {
+    os << "header msg_type=" << header.MsgType()
+       << " msg_len=" << header.MsgLen() << " timestamp=" << header.Timestamp()
+       << " checksum=" << header.Checksum();
+    return os;
   }
 
  private:

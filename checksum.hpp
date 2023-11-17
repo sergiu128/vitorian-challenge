@@ -15,8 +15,8 @@
 // the header before this call. If the checksum is valid and the verification
 // succeeds, the header will contain 0 in its checksum field after this call.
 inline void Checksum(const char* b, uint32_t len, MsgHeader& header) {
-  uint16_t checksum = header.Checksum();
-  header.Checksum(0);
+  uint16_t checksum = header.Checksum();  // get the current checksum (can be 0)
+  header.Checksum(0);                     // set checksum to 0
 
   uint32_t sum = checksum;
   for (uint32_t j = 0; j < len - 1; j += 2) {
@@ -29,5 +29,5 @@ inline void Checksum(const char* b, uint32_t len, MsgHeader& header) {
   sum = (sum >> 16) + (sum & 0xFFFF);
   sum = (sum >> 16) + (sum & 0xFFFF);
 
-  header.Checksum(uint16_t(~sum));
+  header.Checksum(uint16_t(~sum));  // place the new checksum in the header
 }
