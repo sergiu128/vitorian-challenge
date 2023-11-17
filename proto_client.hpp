@@ -25,6 +25,8 @@ class ProtoClient {
   std::string Token() const noexcept { return token_; }
 
  private:
+  static constexpr size_t kMaxRetriesOnWrongChecksum = 10;
+
   void WriteLoginRequest(TcpStream&);
   bool ReadLoginResponse(TcpStream&);
 
@@ -37,5 +39,6 @@ class ProtoClient {
   TcpClient client_{};
   Resolver resolver_{};
   std::string token_{};
-  char buf[1024];
+  char buf_[1024];
+  MsgHeader header_{buf_, 1024, 0};
 };
