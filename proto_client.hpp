@@ -25,7 +25,17 @@ class ProtoClient {
   std::string Token() const noexcept { return token_; }
 
  private:
+  void WriteLoginRequest(TcpStream&);
+  bool ReadLoginResponse(TcpStream&);
+
+  void WriteSubmissionRequest(TcpStream&);
+  bool ReadSubmissionResponse(TcpStream&);
+
+  void WriteLogoutRequest(TcpStream&);
+  bool ReadLogoutResponse(TcpStream&);
+
   TcpClient client_{};
   Resolver resolver_{};
   std::string token_{};
+  char buf[1024];
 };
