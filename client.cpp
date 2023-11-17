@@ -8,6 +8,7 @@ int main() {
     client.Run("challenge1.vitorian.com", 9009);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
